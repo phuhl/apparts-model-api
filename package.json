@@ -1,0 +1,57 @@
+{
+  "name": "@apparts/model-api",
+  "version": "1.0.0",
+  "description": "Generate CRUDish API-endpoints for a model defined with the @apparts/model package",
+  "main": "index.js",
+  "scripts": {
+    "testOne": "jest",
+    "test": "jest --watch",
+    "testCoverage": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/phuhl/apparts-model-api"
+  },
+  "keywords": [
+    "apparts",
+    "model",
+    "api"
+  ],
+  "author": "Philipp Uhl",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/phuhl/apparts-model-api/issues"
+  },
+  "peerDependencies": {
+    "@apparts/model": "^4.0.1",
+    "@apparts/types": "^6.0.0"
+  },
+  "jest": {
+    "testTimeout": 5000,
+    "clearMocks": true,
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/tests"
+    ],
+    "watchPathIgnorePatterns": [
+      "/\\.#.*",
+      "/.*~",
+      "/#.*#"
+    ]
+  },
+  "devDependencies": {
+    "@apparts/config": "^1.0.5",
+    "@apparts/db": "^2.1.0",
+    "@apparts/error": "^1.0.3",
+    "@apparts/model": "^4.0.1",
+    "@apparts/types": "^6.0.0",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "jest": "^26.6.0",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.3.0",
+    "ramda": "^0.27.1",
+    "supertest": "^6.1.3"
+  },
+  "homepage": "https://github.com/phuhl/apparts-model-api#readme"
+}
