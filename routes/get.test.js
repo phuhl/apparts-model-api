@@ -37,7 +37,7 @@ CREATE TABLE submodel (
     api: 1,
   },
   [],
-  "testmodel"
+  "get"
 );
 
 const app = _app();

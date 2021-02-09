@@ -1,16 +1,5 @@
 const { generateGet } = require("./generateGet");
-const keep = async (p, c) => {
-  try {
-    if (typeof p === "function") {
-      return await p();
-    } else {
-      return await p;
-    }
-  } catch (err) {
-    return await c();
-  }
-};
-
+const generateGetByIds = require("./generateGetByIds");
 const addCrud = (prefix, app, useModel, accessorFs, webtokenkey) => {
   const methods = generateMethods(prefix, useModel, accessorFs, webtokenkey);
 
@@ -25,6 +14,14 @@ const generateMethods = (prefix, useModel, accessorFs, webtokenkey) => {
   const res = { get: {}, post: {}, put: {}, delete: {} };
   if (accessorFs.get) {
     res.get[""] = generateGet(prefix, useModel, accessorFs.get, webtokenkey);
+  }
+  if (accessorFs.getByIds) {
+    res.get["/:ids"] = generateGetByIds(
+      prefix,
+      useModel,
+      accessorFs.get,
+      webtokenkey
+    );
   }
   return res;
 };

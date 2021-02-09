@@ -33,4 +33,21 @@ const nameFromPrefix = (prefix) => {
     .replace(/^\w/, (c) => c.toUpperCase()));
 };
 
-module.exports = { createParams, checkAuth, nameFromPrefix };
+const createReturns = (useModel) => {
+  const [Models] = useModel();
+  const returns = {};
+  const types = Models.getTypes();
+  for (const key in types) {
+    const tipe = types[key];
+    let name = key;
+    if (tipe.public) {
+      if (tipe.mapped) {
+        name = tipe.mapped;
+      }
+      returns[name] = { type: tipe.type, optional: tipe.optional };
+    }
+  }
+  return returns;
+};
+
+module.exports = { createParams, checkAuth, nameFromPrefix, createReturns };

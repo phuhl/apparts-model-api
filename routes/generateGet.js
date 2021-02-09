@@ -1,4 +1,9 @@
-const { createParams, checkAuth, nameFromPrefix } = require("./common");
+const {
+  createParams,
+  checkAuth,
+  nameFromPrefix,
+  createReturns,
+} = require("./common");
 const { HttpError } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 
@@ -76,7 +81,7 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
       return res.getPublic();
     },
     {
-      title: "Get a " + nameFromPrefix(prefix),
+      title: "Get " + nameFromPrefix(prefix),
       returns: [
         ...prepauthTokenJWT.returns,
         {
@@ -111,23 +116,6 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
     }
   );
   return getF;
-};
-
-const createReturns = (useModel) => {
-  const [Models] = useModel();
-  const returns = {};
-  const types = Models.getTypes();
-  for (const key in types) {
-    const tipe = types[key];
-    let name = key;
-    if (tipe.public) {
-      if (tipe.mapped) {
-        name = tipe.mapped;
-      }
-      returns[name] = { type: tipe.type, optional: tipe.optional };
-    }
-  }
-  return returns;
 };
 
 module.exports = { generateGet };
