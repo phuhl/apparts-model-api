@@ -58,7 +58,7 @@ const app = _app();
 beforeEach(() => {});
 afterEach(() => {});
 
-describe("put", () => {
+describe("Put", () => {
   const path = "/v/1/model",
     auth = { put: anybody };
   addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
@@ -83,6 +83,24 @@ describe("put", () => {
     );
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(error("Fieldmissmatch"));
+    expect(checkType(response, "/:id")).toBeTruthy();
+  });
+
+  test("Put non-existing model", async () => {
+    const dbs = getPool();
+    const model = await new Model(dbs, { mapped: 7 }).store();
+    const response = await request(app)
+      .put(url("model/" + (model.content.id + 1)))
+      .send({
+        someNumber: 99,
+      })
+      .set("Authorization", "Bearer " + jwt());
+    const modelNew = await new Model(dbs).loadById(model.content.id);
+    expect({ ...model.content, optionalVal: null }).toMatchObject(
+      modelNew.content
+    );
+    expect(response.status).toBe(404);
+    expect(response.body).toMatchObject(error("Model not found"));
     expect(checkType(response, "/:id")).toBeTruthy();
   });
 

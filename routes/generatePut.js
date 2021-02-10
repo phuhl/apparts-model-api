@@ -8,7 +8,7 @@ const {
 } = require("./common");
 const { HttpError } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
-const { DoesExist } = require("@apparts/model");
+const { DoesExist, NotFound } = require("@apparts/model");
 
 const createBody = (prefix, useModel) => {
   const params = createParams(prefix, useModel);
@@ -86,7 +86,11 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
         );
       }
 
-      const model = await new One().load(params);
+      const model = await keep(
+        () => new One().load(params),
+        NotFound,
+        () => HttpError.notFound(nameFromPrefix(prefix))
+      );
       model.content = { ...model.content, ...body, ...optionalsToBeRemoved };
       await model.update();
       return model.content.id;
@@ -107,6 +111,7 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
           status: 400,
           error: "Could not alter item because it would change a path id",
         },
+        { status: 404, error: nameFromPrefix(prefix) + " not found" },
       ],
     }
   );

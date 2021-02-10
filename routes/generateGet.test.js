@@ -45,7 +45,7 @@ const app = _app();
 beforeEach(() => {});
 afterEach(() => {});
 
-describe("get", () => {
+describe("Get", () => {
   const path = "/v/1/model",
     auth = { get: anybody };
   addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
