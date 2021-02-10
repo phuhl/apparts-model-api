@@ -11,6 +11,11 @@ const types = {
     type: "id",
     public: true,
   },
+  opt: {
+    type: "string",
+    public: true,
+    optional: true,
+  },
 };
 
 const [Models, Model, NoModel] = useModel(types, "submodel");

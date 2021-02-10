@@ -1,6 +1,7 @@
 const generateGet = require("./generateGet");
 const generateGetByIds = require("./generateGetByIds");
 const generatePost = require("./generatePost");
+const generatePut = require("./generatePut");
 
 const addCrud = (prefix, app, useModel, accessorFs, webtokenkey) => {
   const methods = generateMethods(prefix, useModel, accessorFs, webtokenkey);
@@ -27,6 +28,14 @@ const generateMethods = (prefix, useModel, accessorFs, webtokenkey) => {
   }
   if (accessorFs.post) {
     res.post[""] = generatePost(prefix, useModel, accessorFs.post, webtokenkey);
+  }
+  if (accessorFs.put) {
+    res.put["/:id"] = generatePut(
+      prefix,
+      useModel,
+      accessorFs.put,
+      webtokenkey
+    );
   }
   return res;
 };

@@ -30,8 +30,8 @@ const createBody = (prefix, useModel) => {
   return bodyParams;
 };
 
-const generatePost = (prefix, useModel, authF, webtokenkey) => {
-  const postF = prepauthTokenJWT(webtokenkey)(
+const generatePut = (prefix, useModel, authF, webtokenkey) => {
+  const putF = prepauthTokenJWT(webtokenkey)(
     {
       params: {
         ...createParams(prefix, useModel),
@@ -50,7 +50,7 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
         (e) =>
           new HttpError(
             400,
-            "Could not create item because your request had too many parameters",
+            "Could not alter item because your request had too many parameters",
             e.message
           )
       );
@@ -59,18 +59,36 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
         if (!types[key] || !types[key].public || types[key].auto) {
           return new HttpError(
             400,
-            "Could not create item because your request had too many parameters",
+            "Could not alter item because your request had too many parameters",
             `"${key}" does not exist`
           );
         }
       }
 
-      const model = new One({ ...body, ...params });
-      await keep(
-        () => model.store(),
-        DoesExist,
-        () => new HttpError(412, "Could not create item because it exists")
-      );
+      const optionalsToBeRemoved = {};
+      Object.keys(types)
+        .filter(
+          (key) =>
+            !body[key] &&
+            types[key].public &&
+            (types[key].optional || types[key].default)
+        )
+        .forEach((key) => {
+          optionalsToBeRemoved[key] = null;
+        });
+
+      const paramOverlap = Object.keys(body).filter((key) => params[key]);
+      if (paramOverlap.length > 0) {
+        return new HttpError(
+          400,
+          "Could not alter item because it would change a path id",
+          paramOverlap
+        );
+      }
+
+      const model = await new One().load(params);
+      model.content = { ...model.content, ...body, ...optionalsToBeRemoved };
+      await model.update();
       return model.content.id;
     },
     {
@@ -83,13 +101,16 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
         {
           status: 400,
           error:
-            "Could not create item because your request had too many parameters",
+            "Could not alter item because your request had too many parameters",
         },
-        { status: 412, error: "Could not create item because it exists" },
+        {
+          status: 400,
+          error: "Could not alter item because it would change a path id",
+        },
       ],
     }
   );
-  return postF;
+  return putF;
 };
 
-module.exports = generatePost;
+module.exports = generatePut;

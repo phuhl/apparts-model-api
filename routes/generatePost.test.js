@@ -227,6 +227,7 @@ describe("Post multikey", () => {
       })
       .set("Authorization", "Bearer " + jwt());
     const model = await new MultiModel(dbs).load({});
+    expect(model.content).toMatchObject({ id: 1000, key: "myKey" });
     expect(response.status).toBe(200);
     expect(response.body).toBe(1000);
     expect(checkType(response, "")).toBeTruthy();
