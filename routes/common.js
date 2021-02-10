@@ -1,3 +1,5 @@
+const { HttpError } = require("@apparts/error");
+
 const checkAuth = async (authF, res, me) => {
   const allowed = await authF(res, me);
   if (!allowed) {
@@ -50,4 +52,42 @@ const createReturns = (useModel) => {
   return returns;
 };
 
-module.exports = { createParams, checkAuth, nameFromPrefix, createReturns };
+const reverseMap = (collection, types) => {
+  const unmappedKeys = Object.keys(collection);
+  const mappedCollection = {};
+
+  for (const key of unmappedKeys) {
+    const mappedKey = Object.keys(types).filter(
+      (t) => types[t].mapped === key
+    )[0];
+    if (mappedKey) {
+      mappedCollection[mappedKey] = collection[key];
+    } else if (!types[key] || types[key].mapped) {
+      throw new HttpError(400, '"' + key + '" does not exist');
+    } else {
+      mappedCollection[key] = collection[key];
+    }
+  }
+  return mappedCollection;
+};
+
+const keep = async (fun, exceptionType, exceptionReplacement) => {
+  try {
+    return await fun();
+  } catch (e) {
+    if (e instanceof exceptionType) {
+      throw exceptionReplacement(e);
+    } else {
+      throw e;
+    }
+  }
+};
+
+module.exports = {
+  createParams,
+  checkAuth,
+  nameFromPrefix,
+  createReturns,
+  reverseMap,
+  keep,
+};

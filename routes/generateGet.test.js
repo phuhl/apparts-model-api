@@ -142,7 +142,7 @@ describe("get", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error("Filter could not be applied to field")
+      error("Filter could not be applied to field", '"dummy" does not exist')
     );
     expect(checkType(response, "")).toBeTruthy();
   });
@@ -157,7 +157,9 @@ describe("get", () => {
       )
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(error("Filter-operator not known"));
+    expect(response.body).toMatchObject(
+      error("Filter-operator not known", 'Unknown operators: "gt"')
+    );
     expect(checkType(response, "")).toBeTruthy();
   });
 
@@ -224,7 +226,10 @@ describe("get", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error("Filter could not be applied to field")
+      error(
+        "Filter could not be applied to field",
+        '"hasDefault" does not exist'
+      )
     );
     expect(checkType(response, "")).toBeTruthy();
   });
@@ -310,7 +315,7 @@ describe("get subresources", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response3.status).toBe(400);
     expect(response3.body).toMatchObject(
-      error("Filter cannot be in the path, too")
+      error("Filter cannot be in the path, too", 'param: "modelId"')
     );
     expect(checkType(response3, "")).toBeTruthy();
   });

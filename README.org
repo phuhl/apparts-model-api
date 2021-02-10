@@ -21,8 +21,8 @@ function.
     parameters (see next section).
   - =app : App= :: The express app
   - =modelGenerator : function= :: A function that returns an array in
-    the form of =[OneModel, ManyModel, NoneModel]= (as constructed in the
-    first section).
+    the form of =[OneModel, ManyModel, NoneModel]= (as does the
+    =makeModel= function from [[https://github.com/phuhl/apparts-model][@apparts/model]] package).
   - =accessFunctions : object= :: An object that contains functions that
     define access rights for the individual endpoints. If one of the
     keys is not present in the object, that route will not be

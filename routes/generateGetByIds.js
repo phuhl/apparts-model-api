@@ -24,7 +24,6 @@ const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
     {
       title: "Get " + nameFromPrefix(prefix) + " by Ids",
       returns: [
-        ...prepauthTokenJWT.returns,
         {
           status: 200,
           type: "array",

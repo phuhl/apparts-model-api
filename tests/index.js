@@ -5,7 +5,8 @@ const {
 
 const { setup, teardown, getPool } = require("./database");
 
-const error = (text) => ({ error: text });
+const error = (error, description) =>
+  description ? { error, description } : { error };
 
 module.exports = (apithing, { api, schemas }, dbs, name) => {
   const checkType = (res, name) => _checkType(apithing, res, name);

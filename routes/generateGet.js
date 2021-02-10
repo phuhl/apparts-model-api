@@ -3,6 +3,8 @@ const {
   checkAuth,
   nameFromPrefix,
   createReturns,
+  reverseMap,
+  keep,
 } = require("./common");
 const { HttpError } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
@@ -30,27 +32,33 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
             throw e;
           }
         }
-        const unmappedKeys = Object.keys(filter);
+
         const types = Many.getTypes();
-        for (const key of unmappedKeys) {
-          const mappedKey = Object.keys(types).filter(
-            (t) => types[t].mapped === key
-          )[0];
-          if (mappedKey) {
-            filter[mappedKey] = filter[key];
-            delete filter[key];
-          } else if (!types[key] || types[key].mapped) {
-            return new HttpError(400, "Filter could not be applied to field");
-          } else {
-          }
-        }
+        filter = await keep(
+          () => reverseMap(filter, types),
+          HttpError,
+          (e) =>
+            new HttpError(
+              400,
+              "Filter could not be applied to field",
+              e.message
+            )
+        );
         const mappedKeys = Object.keys(filter);
         for (const key of mappedKeys) {
           if (!types[key].public || types[key].derived) {
-            return new HttpError(400, "Filter could not be applied to field");
+            return new HttpError(
+              400,
+              "Filter could not be applied to field",
+              `"${key}" does not exist`
+            );
           }
           if (params[key] !== undefined) {
-            return new HttpError(400, "Filter cannot be in the path, too");
+            return new HttpError(
+              400,
+              "Filter cannot be in the path, too",
+              `param: "${key}"`
+            );
           }
           if (typeof filter[key] === "object") {
             const allowedOperators = ["like"];
@@ -58,7 +66,11 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
               (operator) => allowedOperators.indexOf(operator) === -1
             );
             if (unknownOperators.length > 0) {
-              return new HttpError(400, "Filter-operator not known");
+              return new HttpError(
+                400,
+                "Filter-operator not known",
+                `Unknown operators: "${unknownOperators}"`
+              );
             }
 
             if (filter[key].like) {
@@ -83,7 +95,6 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
     {
       title: "Get " + nameFromPrefix(prefix),
       returns: [
-        ...prepauthTokenJWT.returns,
         {
           status: 200,
           type: "array",
@@ -118,4 +129,4 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
   return getF;
 };
 
-module.exports = { generateGet };
+module.exports = generateGet;
