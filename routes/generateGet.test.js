@@ -1,26 +1,8 @@
-const request = require("supertest");
-const {
-  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
-} = require("@apparts/types");
-const { checkJWT, jwt } = require("../tests/checkJWT");
-const { Model, Models, NoModel, useModel } = require("../tests/model.js");
-const {
-  SubModel,
-  SubModels,
-  SubNoModel,
-  useSubModel,
-} = require("../tests/submodel.js");
-const {
-  addCrud,
-  accessLogic: { anybody },
-} = require("../");
-const { generateMethods } = require("./");
-
-const { app: _app, url, error, getPool } = require("../tests")(
-  {},
-  {
-    schemas: [
-      `
+const { app: _app, url, error, getPool } = require("../tests")({
+  testName: "get",
+  apiVersion: 1,
+  schemas: [
+    `
 CREATE TABLE model (
   id SERIAL PRIMARY KEY,
   "optionalVal" TEXT,
@@ -33,12 +15,20 @@ CREATE TABLE submodel (
   "modelId" INT NOT NULL,
   FOREIGN KEY ("modelId") REFERENCES model(id)
 );      `,
-    ],
-    api: 1,
-  },
-  [],
-  "get"
-);
+  ],
+});
+const request = require("supertest");
+const {
+  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
+} = require("@apparts/types");
+const { checkJWT, jwt } = require("../tests/checkJWT");
+const { Model, useModel } = require("../tests/model.js");
+const { SubModel, useSubModel } = require("../tests/submodel.js");
+const {
+  addCrud,
+  accessLogic: { anybody },
+} = require("../");
+const { generateMethods } = require("./");
 
 const app = _app();
 
@@ -118,7 +108,6 @@ describe("Get", () => {
   });
 
   test("Get with malformated filter", async () => {
-    const dbs = getPool();
     const response = await request(app)
       .get(
         url("model", {
@@ -132,7 +121,6 @@ describe("Get", () => {
   });
 
   test("Get with filter with unknown keys", async () => {
-    const dbs = getPool();
     const response = await request(app)
       .get(
         url("model", {
@@ -148,7 +136,6 @@ describe("Get", () => {
   });
 
   test("Get with filter with unknown operator", async () => {
-    const dbs = getPool();
     const response = await request(app)
       .get(
         url("model", {
@@ -188,7 +175,6 @@ describe("Get", () => {
   });
 
   test("Get with filter with like operator on non-string", async () => {
-    const dbs = getPool();
     const response = await request(app)
       .get(
         url("model", {
@@ -216,7 +202,6 @@ describe("Get", () => {
   });
 
   test("Get with filter on non-public type", async () => {
-    const dbs = getPool();
     const response = await request(app)
       .get(
         url("model", {
@@ -236,7 +221,7 @@ describe("Get", () => {
 
   test("Get filtered", async () => {
     const dbs = getPool();
-    const model1 = await new Model(dbs, {
+    await new Model(dbs, {
       mapped: 30,
       optionalVal: "cheap",
     }).store();
@@ -301,7 +286,7 @@ describe("get subresources", () => {
     expect(response2.body.length).toBe(0);
     expect(checkType(response2, "")).toBeTruthy();
 
-    const submodel2 = await new SubModel(dbs, {
+    await new SubModel(dbs, {
       modelId: model2.content.id,
     }).store();
     const response3 = await request(app)

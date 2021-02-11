@@ -1,10 +1,4 @@
-const {
-  createParams,
-  checkAuth,
-  nameFromPrefix,
-  createReturns,
-} = require("./common");
-const { HttpError } = require("@apparts/error");
+const { createParams, nameFromPrefix, createReturns } = require("./common");
 const { prepauthTokenJWT } = require("@apparts/types");
 
 const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {

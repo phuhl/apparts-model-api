@@ -1,32 +1,7 @@
-const request = require("supertest");
-const {
-  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
-} = require("@apparts/types");
-const { checkJWT, jwt } = require("../tests/checkJWT");
-const { Model, Models, NoModel, useModel } = require("../tests/model.js");
-const {
-  SubModel,
-  SubModels,
-  SubNoModel,
-  useSubModel,
-} = require("../tests/submodel.js");
-const {
-  MultiModel,
-  MultiModels,
-  MultiNoModel,
-  useMultiModel,
-} = require("../tests/multiKeyModel.js");
-const {
-  addCrud,
-  accessLogic: { anybody },
-} = require("../");
-const { generateMethods } = require("./");
-
-const { app: _app, url, error, getPool } = require("../tests")(
-  {},
-  {
-    schemas: [
-      `
+const { app: _app, url, error, getPool } = require("../tests")({
+  testName: "put",
+  schemas: [
+    `
 CREATE TABLE model (
   id SERIAL PRIMARY KEY,
   "optionalVal" TEXT,
@@ -45,13 +20,22 @@ CREATE TABLE submodel (
   "modelId" INT NOT NULL,
   opt TEXT,
   FOREIGN KEY ("modelId") REFERENCES model(id)
-);      `,
-    ],
-    api: 1,
-  },
-  [],
-  "put"
-);
+);`,
+  ],
+  apiVersion: 1,
+});
+const request = require("supertest");
+const {
+  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
+} = require("@apparts/types");
+const { checkJWT, jwt } = require("../tests/checkJWT");
+const { Model, useModel } = require("../tests/model.js");
+const { SubModel, useSubModel } = require("../tests/submodel.js");
+const {
+  addCrud,
+  accessLogic: { anybody },
+} = require("../");
+const { generateMethods } = require("./");
 
 const app = _app();
 
@@ -290,7 +274,7 @@ describe("Put subresources", () => {
   test("Put a subresouce", async () => {
     const dbs = getPool();
     const model1 = await new Model(dbs, { mapped: 100 }).store();
-    const model2 = await new Model(dbs, { mapped: 101 }).store();
+    await new Model(dbs, { mapped: 101 }).store();
     const submodel = await new SubModel(dbs, {
       modelId: model1.content.id,
     }).store();

@@ -2,6 +2,7 @@ const generateGet = require("./generateGet");
 const generateGetByIds = require("./generateGetByIds");
 const generatePost = require("./generatePost");
 const generatePut = require("./generatePut");
+const generateDelete = require("./generateDelete");
 
 const addCrud = (prefix, app, useModel, accessorFs, webtokenkey) => {
   const methods = generateMethods(prefix, useModel, accessorFs, webtokenkey);
@@ -34,6 +35,14 @@ const generateMethods = (prefix, useModel, accessorFs, webtokenkey) => {
       prefix,
       useModel,
       accessorFs.put,
+      webtokenkey
+    );
+  }
+  if (accessorFs.delete) {
+    res.delete["/:ids"] = generateDelete(
+      prefix,
+      useModel,
+      accessorFs.delete,
       webtokenkey
     );
   }

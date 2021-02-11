@@ -1,32 +1,8 @@
-const request = require("supertest");
-const {
-  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
-} = require("@apparts/types");
-const { checkJWT, jwt } = require("../tests/checkJWT");
-const { Model, Models, NoModel, useModel } = require("../tests/model.js");
-const {
-  SubModel,
-  SubModels,
-  SubNoModel,
-  useSubModel,
-} = require("../tests/submodel.js");
-const {
-  MultiModel,
-  MultiModels,
-  MultiNoModel,
-  useMultiModel,
-} = require("../tests/multiKeyModel.js");
-const {
-  addCrud,
-  accessLogic: { anybody },
-} = require("../");
-const { generateMethods } = require("./");
-
-const { app: _app, url, error, getPool } = require("../tests")(
-  {},
-  {
-    schemas: [
-      `
+const { app: _app, url, error, getPool } = require("../tests")({
+  testName: "post",
+  apiVersion: 1,
+  schemas: [
+    `
 CREATE TABLE model (
   id SERIAL PRIMARY KEY,
   "optionalVal" TEXT,
@@ -45,12 +21,21 @@ CREATE TABLE submodel (
   "modelId" INT NOT NULL,
   FOREIGN KEY ("modelId") REFERENCES model(id)
 );      `,
-    ],
-    api: 1,
-  },
-  [],
-  "post"
-);
+  ],
+});
+const request = require("supertest");
+const {
+  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
+} = require("@apparts/types");
+const { checkJWT, jwt } = require("../tests/checkJWT");
+const { Model, NoModel, useModel } = require("../tests/model.js");
+const { SubModel, useSubModel } = require("../tests/submodel.js");
+const { MultiModel, useMultiModel } = require("../tests/multiKeyModel.js");
+const {
+  addCrud,
+  accessLogic: { anybody },
+} = require("../");
+const { generateMethods } = require("./");
 
 const app = _app();
 
@@ -261,7 +246,7 @@ describe("Post subresources", () => {
   test("Post a subresouce", async () => {
     const dbs = getPool();
     const model1 = await new Model(dbs, { mapped: 100 }).store();
-    const model2 = await new Model(dbs, { mapped: 101 }).store();
+    await new Model(dbs, { mapped: 101 }).store();
     const response = await request(app)
       .post(url(`model/${model1.content.id}/submodel`))
       .set("Authorization", "Bearer " + jwt());

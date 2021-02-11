@@ -1,11 +1,4 @@
-const {
-  createParams,
-  checkAuth,
-  nameFromPrefix,
-  createReturns,
-  reverseMap,
-  keep,
-} = require("./common");
+const { createParams, nameFromPrefix, reverseMap, keep } = require("./common");
 const { HttpError } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 const { DoesExist } = require("@apparts/model");

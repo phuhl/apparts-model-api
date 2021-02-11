@@ -29,10 +29,10 @@ const nameFromPrefix = (prefix) => {
   if (prefix.substr(-1) === "/") {
     prefix = prefix.slice(0, -1);
   }
-  return (name = prefix
+  return prefix
     .split("/")
     .reverse()[0]
-    .replace(/^\w/, (c) => c.toUpperCase()));
+    .replace(/^\w/, (c) => c.toUpperCase());
 };
 
 const createReturns = (useModel) => {

@@ -1,20 +1,18 @@
 const bodyParser = require("body-parser");
-const R = require("ramda");
 const connect = require("@apparts/db");
-
-const tapRoute = (f) => R.tap((route) => route.use(f));
 
 let DB_CONFIG = null;
 let dbs = undefined;
 const getDBPool = (next) => {
   if (dbs === undefined) {
-    dbs = connect(DB_CONFIG, (e, dbs) => {
+    connect(DB_CONFIG, (e, newDbs) => {
       if (e) {
         /* istanbul ignore next */
         console.log("DB ERROR");
         console.log(e);
         throw e;
       }
+      dbs = newDbs;
       next(dbs);
     });
   } else {
@@ -30,7 +28,7 @@ const injectDB = (req, res, next) => {
   });
 };
 
-const applyMiddleware = (route, dbConfig, noCors = false) => {
+const applyMiddleware = (route, dbConfig) => {
   DB_CONFIG = dbConfig;
   route.use(bodyParser.json());
   route.use(injectDB);
@@ -41,9 +39,11 @@ module.exports.shutdown = () => {
   if (dbs) {
     return new Promise((res) => {
       dbs.shutdown(() => {
+        dbs = undefined;
         res();
       });
     });
   }
+
   return Promise.resolve();
 };

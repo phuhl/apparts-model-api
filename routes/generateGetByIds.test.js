@@ -1,26 +1,8 @@
-const request = require("supertest");
-const {
-  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
-} = require("@apparts/types");
-const { checkJWT, jwt } = require("../tests/checkJWT");
-const { Model, Models, NoModel, useModel } = require("../tests/model.js");
-const {
-  SubModel,
-  SubModels,
-  SubNoModel,
-  useSubModel,
-} = require("../tests/submodel.js");
-const {
-  addCrud,
-  accessLogic: { anybody },
-} = require("../");
-const { generateMethods } = require("./");
-
-const { app: _app, url, error, getPool } = require("../tests")(
-  {},
-  {
-    schemas: [
-      `
+const { app: _app, url, getPool } = require("../tests")({
+  testName: "getByIds",
+  apiVersion: 1,
+  schemas: [
+    `
 CREATE TABLE model (
   id SERIAL PRIMARY KEY,
   "optionalVal" TEXT,
@@ -33,12 +15,21 @@ CREATE TABLE submodel (
   "modelId" INT NOT NULL,
   FOREIGN KEY ("modelId") REFERENCES model(id)
 );      `,
-    ],
-    api: 1,
-  },
-  [],
-  "getByIds"
-);
+  ],
+});
+
+const request = require("supertest");
+const {
+  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
+} = require("@apparts/types");
+const { checkJWT, jwt } = require("../tests/checkJWT");
+const { Model, useModel } = require("../tests/model.js");
+const { SubModel, useSubModel } = require("../tests/submodel.js");
+const {
+  addCrud,
+  accessLogic: { anybody },
+} = require("../");
+const { generateMethods } = require("./");
 
 const app = _app();
 
@@ -59,7 +50,7 @@ describe("getByIds", () => {
       mapped: 10,
       optionalVal: "test",
     }).store();
-    const model2 = await new Model(dbs, { mapped: 11 }).store();
+    await new Model(dbs, { mapped: 11 }).store();
     const model3 = await new Model(dbs, { mapped: 12 }).store();
     const response = await request(app)
       .get(
@@ -97,13 +88,13 @@ describe("getByIds subresources", () => {
     const submodel1 = await new SubModel(dbs, {
       modelId: model1.content.id,
     }).store();
-    const submodel2 = await new SubModel(dbs, {
+    await new SubModel(dbs, {
       modelId: model1.content.id,
     }).store();
     const submodel3 = await new SubModel(dbs, {
       modelId: model1.content.id,
     }).store();
-    const submodel4 = await new SubModel(dbs, {
+    await new SubModel(dbs, {
       modelId: model2.content.id,
     }).store();
 

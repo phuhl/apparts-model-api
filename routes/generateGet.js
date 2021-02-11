@@ -1,6 +1,5 @@
 const {
   createParams,
-  checkAuth,
   nameFromPrefix,
   createReturns,
   reverseMap,

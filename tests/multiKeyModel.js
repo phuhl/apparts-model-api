@@ -15,4 +15,4 @@ const types = {
 
 const [Models, Model, NoModel] = useModel(types, "multikey");
 
-module.exports = makeModel("MultiModel", types, [Models, Model, NoModel]);
+module.exports = makeModel("MultiModel", [Models, Model, NoModel]);

@@ -20,4 +20,4 @@ const types = {
 
 const [Models, Model, NoModel] = useModel(types, "submodel");
 
-module.exports = makeModel("SubModel", types, [Models, Model, NoModel]);
+module.exports = makeModel("SubModel", [Models, Model, NoModel]);

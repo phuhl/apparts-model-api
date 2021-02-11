@@ -1,14 +1,7 @@
-const {
-  createParams,
-  checkAuth,
-  nameFromPrefix,
-  createReturns,
-  reverseMap,
-  keep,
-} = require("./common");
+const { createParams, nameFromPrefix, reverseMap, keep } = require("./common");
 const { HttpError } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
-const { DoesExist, NotFound } = require("@apparts/model");
+const { NotFound } = require("@apparts/model");
 
 const createBody = (prefix, useModel) => {
   const params = createParams(prefix, useModel);
