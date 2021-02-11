@@ -1,4 +1,4 @@
-const { app: _app, url, getPool } = require("../tests")({
+const { app: _app, url, getPool } = require("@apparts/backend-test")({
   testName: "getByIds",
   apiVersion: 1,
   schemas: [

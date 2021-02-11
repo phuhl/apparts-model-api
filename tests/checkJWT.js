@@ -1,5 +1,5 @@
 const JWT = require("jsonwebtoken");
-const { error } = require("./");
+const { error } = require("@apparts/backend-test");
 const jwt = (rest, action = "login") =>
   JWT.sign(
     {

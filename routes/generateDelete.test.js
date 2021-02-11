@@ -1,4 +1,4 @@
-const { app: _app, url, error, getPool } = require("../tests")({
+const { app: _app, url, error, getPool } = require("@apparts/backend-test")({
   testName: "delete",
   schemas: [
     `

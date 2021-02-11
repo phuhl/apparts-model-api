@@ -1,14 +1,14 @@
-const { app: _app, url, error, getPool } = require("../tests")({
+const { app: _app, url, error, getPool } = require("@apparts/backend-test")({
   testName: "get",
   apiVersion: 1,
   schemas: [
     `
-CREATE TABLE model (
-  id SERIAL PRIMARY KEY,
-  "optionalVal" TEXT,
-  "hasDefault" INT NOT NULL,
-  mapped INT NOT NULL
-);
+    CREATE TABLE model (
+      id SERIAL PRIMARY KEY,
+      "optionalVal" TEXT,
+      "hasDefault" INT NOT NULL,
+      mapped INT NOT NULL
+    );
 
 CREATE TABLE submodel (
   id SERIAL PRIMARY KEY,

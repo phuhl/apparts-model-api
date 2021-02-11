@@ -26,21 +26,8 @@
     "@apparts/model": "^4.0.2",
     "@apparts/types": "^6.0.1"
   },
-  "jest": {
-    "testRunner": "jest-circus/runner",
-    "testTimeout": 5000,
-    "clearMocks": true,
-    "coveragePathIgnorePatterns": [
-      "<rootDir>/node_modules/",
-      "<rootDir>/tests"
-    ],
-    "watchPathIgnorePatterns": [
-      "/\\.#.*",
-      "/.*~",
-      "/#.*#"
-    ]
-  },
   "devDependencies": {
+    "@apparts/backend-test": "^1.0.0",
     "@apparts/config": "^1.0.5",
     "@apparts/db": "^2.1.1",
     "@apparts/error": "^1.0.3",
