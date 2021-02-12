@@ -1,5 +1,5 @@
-const { createParams, nameFromPrefix, reverseMap, keep } = require("./common");
-const { HttpError } = require("@apparts/error");
+const { createParams, nameFromPrefix, reverseMap } = require("./common");
+const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 const { DoesExist } = require("@apparts/model");
 
@@ -37,7 +37,7 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
       const [, One] = useModel(dbs);
 
       const types = One.getTypes();
-      body = await keep(
+      body = await fromThrows(
         () => reverseMap(body, types),
         HttpError,
         (e) =>
@@ -59,7 +59,7 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
       }
 
       const model = new One({ ...body, ...params });
-      await keep(
+      await fromThrows(
         () => model.store(),
         DoesExist,
         () => new HttpError(412, "Could not create item because it exists")

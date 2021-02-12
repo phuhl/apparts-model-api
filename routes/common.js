@@ -71,23 +71,10 @@ const reverseMap = (collection, types) => {
   return mappedCollection;
 };
 
-const keep = async (fun, exceptionType, exceptionReplacement) => {
-  try {
-    return await fun();
-  } catch (e) {
-    if (e instanceof exceptionType) {
-      throw exceptionReplacement(e);
-    } else {
-      throw e;
-    }
-  }
-};
-
 module.exports = {
   createParams,
   checkAuth,
   nameFromPrefix,
   createReturns,
   reverseMap,
-  keep,
 };

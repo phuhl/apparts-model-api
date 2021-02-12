@@ -1,4 +1,4 @@
-const { app: _app, url, error, getPool } = require("@apparts/backend-test")({
+const { app, url, error, getPool } = require("@apparts/backend-test")({
   testName: "get",
   apiVersion: 1,
   schemas: [
@@ -29,11 +29,6 @@ const {
   accessLogic: { anybody },
 } = require("../");
 const { generateMethods } = require("./");
-
-const app = _app();
-
-beforeEach(() => {});
-afterEach(() => {});
 
 describe("Get", () => {
   const path = "/v/1/model",
@@ -214,6 +209,42 @@ describe("Get", () => {
       error(
         "Filter could not be applied to field",
         '"hasDefault" does not exist'
+      )
+    );
+    expect(checkType(response, "")).toBeTruthy();
+  });
+
+  test("Get with filter wrong type", async () => {
+    const response = await request(app)
+      .get(
+        url("model", {
+          filter: JSON.stringify({ optionalVal: 77 }),
+        })
+      )
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject(
+      error(
+        "Filter could not be applied to field",
+        'Parameter "optionalVal" has wrong type'
+      )
+    );
+    expect(checkType(response, "")).toBeTruthy();
+  });
+
+  test("Get with mapped filter wrong type", async () => {
+    const response = await request(app)
+      .get(
+        url("model", {
+          filter: JSON.stringify({ someNumber: "77" }),
+        })
+      )
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject(
+      error(
+        "Filter could not be applied to field",
+        'Parameter "someNumber" has wrong type'
       )
     );
     expect(checkType(response, "")).toBeTruthy();

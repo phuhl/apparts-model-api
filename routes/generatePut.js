@@ -1,5 +1,5 @@
-const { createParams, nameFromPrefix, reverseMap, keep } = require("./common");
-const { HttpError } = require("@apparts/error");
+const { createParams, nameFromPrefix, reverseMap } = require("./common");
+const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 const { NotFound } = require("@apparts/model");
 
@@ -37,7 +37,7 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
       const [, One] = useModel(dbs);
 
       const types = One.getTypes();
-      body = await keep(
+      body = await fromThrows(
         () => reverseMap(body, types),
         HttpError,
         (e) =>
@@ -79,7 +79,7 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
         );
       }
 
-      const model = await keep(
+      const model = await fromThrows(
         () => new One().load(params),
         NotFound,
         () => HttpError.notFound(nameFromPrefix(prefix))

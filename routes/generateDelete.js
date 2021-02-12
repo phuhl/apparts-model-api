@@ -1,6 +1,6 @@
-const { createParams, nameFromPrefix, keep } = require("./common");
+const { createParams, nameFromPrefix } = require("./common");
 const { IsReference } = require("@apparts/model");
-const { HttpError } = require("@apparts/error");
+const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 
 const generateDelete = (prefix, useModel, authF, webtokenkey) => {
@@ -19,7 +19,7 @@ const generateDelete = (prefix, useModel, authF, webtokenkey) => {
       const [Many] = useModel(dbs);
       const res = new Many();
       await res.load({ id: { op: "in", val: ids }, ...restParams });
-      await keep(
+      await fromThrows(
         () => res.deleteAll(),
         IsReference,
         () =>

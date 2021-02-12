@@ -1,4 +1,4 @@
-const { app: _app, url, getPool } = require("@apparts/backend-test")({
+const { app, url, getPool } = require("@apparts/backend-test")({
   testName: "getByIds",
   apiVersion: 1,
   schemas: [
@@ -30,11 +30,6 @@ const {
   accessLogic: { anybody },
 } = require("../");
 const { generateMethods } = require("./");
-
-const app = _app();
-
-beforeEach(() => {});
-afterEach(() => {});
 
 describe("getByIds", () => {
   const path = "/v/1/model",

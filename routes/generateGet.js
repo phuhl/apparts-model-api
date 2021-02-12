@@ -3,10 +3,9 @@ const {
   nameFromPrefix,
   createReturns,
   reverseMap,
-  keep,
 } = require("./common");
-const { HttpError } = require("@apparts/error");
-const { prepauthTokenJWT } = require("@apparts/types");
+const { HttpError, fromThrows } = require("@apparts/error");
+const { prepauthTokenJWT, types: appartsTypes } = require("@apparts/types");
 
 const generateGet = (prefix, useModel, authF, webtokenkey) => {
   const getF = prepauthTokenJWT(webtokenkey)(
@@ -25,15 +24,17 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
         try {
           filter = JSON.parse(filter);
         } catch (e) {
+          /* istanbul ignore next */
           if (e instanceof SyntaxError) {
             return new HttpError(400, "Filter not valid");
           } else {
+            /* istanbul ignore next */
             throw e;
           }
         }
 
         const types = Many.getTypes();
-        filter = await keep(
+        filter = await fromThrows(
           () => reverseMap(filter, types),
           HttpError,
           (e) =>
@@ -83,6 +84,14 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
                 );
               }
               filter[key] = { op: "like", val: filter[key].like };
+            }
+          } else {
+            if (!appartsTypes[types[key].type].check(filter[key])) {
+              return new HttpError(
+                400,
+                "Filter could not be applied to field",
+                'Parameter "' + (types[key].mapped || key) + '" has wrong type'
+              );
             }
           }
         }
