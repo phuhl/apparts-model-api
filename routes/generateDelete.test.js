@@ -1,45 +1,53 @@
-const { app, url, error, getPool } = require("@apparts/backend-test")({
-  testName: "delete",
-  schemas: [
-    `
-CREATE TABLE model (
-  id SERIAL PRIMARY KEY,
-  "optionalVal" TEXT,
-  "hasDefault" INT NOT NULL,
-  mapped INT NOT NULL
-);
-
-CREATE TABLE submodel (
-  id SERIAL PRIMARY KEY,
-  "modelId" INT NOT NULL,
-  opt TEXT,
-  FOREIGN KEY ("modelId") REFERENCES model(id)
-);      `,
-  ],
-  apiVersion: 1,
-});
-const request = require("supertest");
-const {
-  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
-} = require("@apparts/types");
-const { checkJWT, jwt } = require("../tests/checkJWT");
-const { Model, NoModel, useModel } = require("../tests/model.js");
-const { SubModel, NoSubModel, useSubModel } = require("../tests/submodel.js");
+const { NoModel, Model, useModel } = require("../tests/model.js");
 const {
   addCrud,
   accessLogic: { anybody },
 } = require("../");
 const { generateMethods } = require("./");
 
+const fName = "/:ids",
+  auth = { delete: anybody };
+const methods = generateMethods("/v/1/model", useModel, auth, "");
+
+const {
+  app,
+  url,
+  error,
+  getPool,
+  checkType,
+  allChecked,
+} = require("@apparts/backend-test")({
+  testName: "delete",
+  apiContainer: methods.delete,
+  schemas: [
+    `
+    CREATE TABLE model (
+      id SERIAL PRIMARY KEY,
+      "optionalVal" TEXT,
+      "hasDefault" INT NOT NULL,
+      mapped INT NOT NULL
+    );
+
+    CREATE TABLE submodel (
+      id SERIAL PRIMARY KEY,
+      "modelId" INT NOT NULL,
+      opt TEXT,
+      FOREIGN KEY ("modelId") REFERENCES model(id)
+);      `,
+  ],
+  apiVersion: 1,
+});
+const request = require("supertest");
+const { checkJWT, jwt } = require("../tests/checkJWT");
+const { SubModel, NoSubModel, useSubModel } = require("../tests/submodel.js");
+
 describe("Delete", () => {
-  const path = "/v/1/model",
-    auth = { delete: anybody };
+  const path = "/v/1/model";
   addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
-  const methods = generateMethods(path, useModel, auth, "");
-  const checkType = (res, name) => _checkType(methods.delete, res, name);
+
   checkJWT(
     () => request(app).delete(url("model/[1]")).send({ someNumber: 3 }),
-    "/:ids",
+    fName,
     checkType
   );
 
@@ -52,7 +60,7 @@ describe("Delete", () => {
     expect(response.body).toBe("ok");
     expect(response.status).toBe(200);
     await new NoModel(dbs).loadNone({ id: model.content.id });
-    expect(checkType(response, "/:ids")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Delete multiple", async () => {
@@ -68,7 +76,7 @@ describe("Delete", () => {
     await new NoModel(dbs).loadNone({ id: model2.content.id });
     expect(response.body).toBe("ok");
     expect(response.status).toBe(200);
-    expect(checkType(response, "/:ids")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Delete none", async () => {
@@ -77,7 +85,7 @@ describe("Delete", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.body).toBe("ok");
     expect(response.status).toBe(200);
-    expect(checkType(response, "/:ids")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Delete non existing model", async () => {
@@ -92,7 +100,7 @@ describe("Delete", () => {
     await new Model(dbs).loadById(model.content.id);
     expect(response.status).toBe(200);
     expect(response.body).toBe("ok");
-    expect(checkType(response, "/:ids")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Delete multiple, some don't exist", async () => {
@@ -111,16 +119,20 @@ describe("Delete", () => {
     await new NoModel(dbs).loadNone({ id: model2.content.id });
     expect(response.body).toBe("ok");
     expect(response.status).toBe(200);
-    expect(checkType(response, "/:ids")).toBeTruthy();
+    checkType(response, fName);
   });
 });
 
 describe("Delete subresources", () => {
-  const path = "/v/1/model/:modelId/submodel",
-    auth = { delete: anybody };
+  const path = "/v/1/model/:modelId/submodel";
   addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");
-  const methods = generateMethods(path, useSubModel, auth, "");
-  const checkType = (res, name) => _checkType(methods.delete, res, name);
+
+  checkJWT(
+    () =>
+      request(app).delete(url("model/1/submodel/[2]")).send({ someNumber: 3 }),
+    fName,
+    checkType
+  );
 
   test("Delete a subresouce", async () => {
     const dbs = getPool();
@@ -147,7 +159,7 @@ describe("Delete subresources", () => {
       id: submodel2.content.id,
       modelId: model2.content.id,
     });
-    expect(checkType(response, "/:ids")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Delete reference of a a subresouce", async () => {
@@ -177,16 +189,10 @@ describe("Delete subresources", () => {
       id: model.content.id,
       mapped: model.content.mapped,
     });
-    expect(checkType(response, "/:ids")).toBeTruthy();
+    checkType(response, fName);
   });
 });
 
-describe("All possible responses tested", () => {
-  const path = "/v/1/model/:modelId/submodel",
-    auth = { delete: anybody };
-  const methods = generateMethods(path, useSubModel, auth, "");
-  const allChecked = (name) => _allChecked(methods.delete, name);
-  test("All possible responses tested", () => {
-    expect(allChecked("/:ids")).toBeTruthy();
-  });
+test("All possible responses tested", () => {
+  allChecked("/:ids");
 });

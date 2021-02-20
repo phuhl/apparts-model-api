@@ -21,9 +21,9 @@ const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
         {
           status: 200,
           type: "array",
-          value: {
+          items: {
             type: "object",
-            values: createReturns(useModel),
+            keys: createReturns(useModel),
           },
         },
       ],

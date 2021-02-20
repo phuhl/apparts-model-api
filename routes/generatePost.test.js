@@ -1,5 +1,25 @@
-const { app, url, error, getPool } = require("@apparts/backend-test")({
+const { NoModel, Model, useModel } = require("../tests/model.js");
+const {
+  addCrud,
+  accessLogic: { anybody },
+} = require("../");
+const { generateMethods } = require("./");
+
+const fName = "";
+const path = "/v/1/model",
+  auth = { post: anybody };
+
+const methods = generateMethods(path, useModel, auth, "");
+const {
+  app,
+  url,
+  error,
+  getPool,
+  checkType,
+  allChecked,
+} = require("@apparts/backend-test")({
   testName: "post",
+  apiContainer: methods.post,
   apiVersion: 1,
   schemas: [
     `
@@ -24,31 +44,19 @@ CREATE TABLE submodel (
   ],
 });
 const request = require("supertest");
-const {
-  checkApiTypes: { checkType: _checkType, allChecked: _allChecked },
-} = require("@apparts/types");
 const { checkJWT, jwt } = require("../tests/checkJWT");
-const { Model, NoModel, useModel } = require("../tests/model.js");
 const { SubModel, useSubModel } = require("../tests/submodel.js");
 const { MultiModel, useMultiModel } = require("../tests/multiKeyModel.js");
-const {
-  addCrud,
-  accessLogic: { anybody },
-} = require("../");
-const { generateMethods } = require("./");
 
 describe("Post", () => {
-  const path = "/v/1/model",
-    auth = { post: anybody };
+  const path = "/v/1/model";
   addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
-  const methods = generateMethods(path, useModel, auth, "");
-  const checkType = (res, name) => _checkType(methods.post, res, name);
+
   checkJWT(
     () => request(app).post(url("model")).send({ someNumber: 3 }),
-    "",
+    fName,
     checkType
   );
-
   test("Post with too few values", async () => {
     const dbs = getPool();
     const response = await request(app)
@@ -58,7 +66,7 @@ describe("Post", () => {
     await new NoModel(dbs).loadNone({});
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(error("Fieldmissmatch"));
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Post", async () => {
@@ -77,7 +85,7 @@ describe("Post", () => {
       hasDefault: 7,
       optionalVal: null,
     });
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Post with optional value", async () => {
@@ -97,7 +105,7 @@ describe("Post", () => {
       hasDefault: 7,
       optionalVal: "testYes",
     });
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Post with non-public value", async () => {
@@ -117,7 +125,7 @@ describe("Post", () => {
         '"hasDefault" does not exist'
       )
     );
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Post with non existing value", async () => {
@@ -137,7 +145,7 @@ describe("Post", () => {
         '"rubbish" does not exist'
       )
     );
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Post with unmapped value", async () => {
@@ -157,7 +165,7 @@ describe("Post", () => {
         '"mapped" does not exist'
       )
     );
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
     const response2 = await request(app)
       .post(url("model"))
       .send({
@@ -167,7 +175,7 @@ describe("Post", () => {
     await new NoModel(dbs).loadNone({ mapped: 100 });
     expect(response2.status).toBe(400);
     expect(response2.body).toMatchObject(error("Fieldmissmatch"));
-    expect(checkType(response2, "")).toBeTruthy();
+    checkType(response2, fName);
   });
   test("Post with id", async () => {
     const dbs = getPool();
@@ -186,16 +194,13 @@ describe("Post", () => {
         '"id" does not exist'
       )
     );
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 });
 
 describe("Post multikey", () => {
-  const path = "/v/1/multimodel",
-    auth = { post: anybody };
+  const path = "/v/1/multimodel";
   addCrud(path, app, useMultiModel, auth, "rsoaietn0932lyrstenoie3nrst");
-  const methods = generateMethods(path, useMultiModel, auth, "");
-  const checkType = (res, name) => _checkType(methods.post, res, name);
 
   test("Post with multi key", async () => {
     const dbs = getPool();
@@ -210,7 +215,7 @@ describe("Post multikey", () => {
     expect(model.content).toMatchObject({ id: 1000, key: "myKey" });
     expect(response.status).toBe(200);
     expect(response.body).toBe(1000);
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 
   test("Post with key collision", async () => {
@@ -227,16 +232,13 @@ describe("Post multikey", () => {
     expect(response.body).toMatchObject(
       error("Could not create item because it exists")
     );
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 });
 
 describe("Post subresources", () => {
-  const path = "/v/1/model/:modelId/submodel",
-    auth = { post: anybody };
+  const path = "/v/1/model/:modelId/submodel";
   addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");
-  const methods = generateMethods(path, useSubModel, auth, "");
-  const checkType = (res, name) => _checkType(methods.post, res, name);
 
   test("Post a subresouce", async () => {
     const dbs = getPool();
@@ -252,16 +254,10 @@ describe("Post subresources", () => {
       id: submodel.content.id,
       modelId: model1.content.id,
     });
-    expect(checkType(response, "")).toBeTruthy();
+    checkType(response, fName);
   });
 });
 
-describe("All possible responses tested", () => {
-  const path = "/v/1/model/:modelId/submodel",
-    auth = { post: anybody };
-  const methods = generateMethods(path, useSubModel, auth, "");
-  const allChecked = (name) => _allChecked(methods.post, name);
-  test("All possible responses tested", () => {
-    expect(allChecked("")).toBeTruthy();
-  });
+test("All possible responses tested", () => {
+  allChecked(fName);
 });

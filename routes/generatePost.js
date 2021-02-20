@@ -1,27 +1,12 @@
-const { createParams, nameFromPrefix, reverseMap } = require("./common");
+const {
+  createParams,
+  createBody,
+  nameFromPrefix,
+  reverseMap,
+} = require("./common");
 const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 const { DoesExist } = require("@apparts/model");
-
-const createBody = (prefix, useModel) => {
-  const params = createParams(prefix, useModel);
-  const [Models] = useModel();
-  const bodyParams = {};
-  const types = Models.getTypes();
-  for (const key in types) {
-    const tipe = types[key];
-    let name = key;
-    if (tipe.public && !tipe.auto) {
-      if (tipe.mapped) {
-        name = tipe.mapped;
-      }
-      if (!params[key]) {
-        bodyParams[name] = { type: tipe.type, optional: tipe.optional };
-      }
-    }
-  }
-  return bodyParams;
-};
 
 const generatePost = (prefix, useModel, authF, webtokenkey) => {
   const postF = prepauthTokenJWT(webtokenkey)(

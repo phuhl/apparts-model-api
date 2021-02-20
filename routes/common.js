@@ -25,6 +25,29 @@ const createParams = (prefix, useModel) => {
   return paramTypes;
 };
 
+const createBody = (prefix, useModel) => {
+  const params = createParams(prefix, useModel);
+  const [Models] = useModel();
+  const bodyParams = {};
+  const types = Models.getTypes();
+  for (const key in types) {
+    const tipe = types[key];
+    let name = key;
+    if (tipe.public && !tipe.auto) {
+      if (tipe.mapped) {
+        name = tipe.mapped;
+      }
+      if (!params[key]) {
+        bodyParams[name] = { type: tipe.type };
+      }
+      if (tipe.optional === true) {
+        bodyParams[name].optional = true;
+      }
+    }
+  }
+  return bodyParams;
+};
+
 const nameFromPrefix = (prefix) => {
   if (prefix.substr(-1) === "/") {
     prefix = prefix.slice(0, -1);
@@ -46,7 +69,10 @@ const createReturns = (useModel) => {
       if (tipe.mapped) {
         name = tipe.mapped;
       }
-      returns[name] = { type: tipe.type, optional: tipe.optional };
+      returns[name] = { type: tipe.type };
+      if (tipe.optional) {
+        returns[name].optional = true;
+      }
     }
   }
   return returns;
@@ -73,6 +99,7 @@ const reverseMap = (collection, types) => {
 
 module.exports = {
   createParams,
+  createBody,
   checkAuth,
   nameFromPrefix,
   createReturns,

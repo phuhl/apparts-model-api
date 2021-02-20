@@ -24,15 +24,15 @@
   },
   "peerDependencies": {
     "@apparts/model": "^4.0.2",
-    "@apparts/types": "^6.0.1"
+    "@apparts/types": "^6.1.1"
   },
   "devDependencies": {
-    "@apparts/backend-test": "^1.0.1",
+    "@apparts/backend-test": "^1.0.2",
     "@apparts/config": "^1.0.5",
     "@apparts/db": "^2.1.1",
     "@apparts/error": "^1.0.3",
     "@apparts/model": "^4.0.2",
-    "@apparts/types": "^6.0.1",
+    "@apparts/types": "^6.1.1",
     "eslint": "^7.19.0",
     "jsonwebtoken": "^8.5.1"
   },
