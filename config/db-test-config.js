@@ -2,7 +2,7 @@ module.exports = {
   use: "postgresql",
   postgresql: {
     host: "localhost",
-    port: 5433,
+    port: 5432,
     user: "postgres",
     pw: "",
     db: "appartsmodeltests",
