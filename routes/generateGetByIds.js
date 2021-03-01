@@ -1,4 +1,9 @@
-const { createParams, nameFromPrefix, createReturns } = require("./common");
+const {
+  createParams,
+  nameFromPrefix,
+  createReturns,
+  checkAuth,
+} = require("./common");
 const { prepauthTokenJWT } = require("@apparts/types");
 
 const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
@@ -9,7 +14,14 @@ const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
         ids: { type: "array_id" },
       },
     },
-    async ({ dbs, params: { ids, ...restParams } }) => {
+    async (req, me) => {
+      await checkAuth(authF, req, me);
+
+      const {
+        dbs,
+        params: { ids, ...restParams },
+      } = req;
+
       const [Many] = useModel(dbs);
       const res = new Many();
       await res.load({ id: { op: "in", val: ids }, ...restParams });
@@ -26,6 +38,7 @@ const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
             keys: createReturns(useModel),
           },
         },
+        { status: 403, error: "You don't have the rights to retrieve this." },
       ],
     }
   );

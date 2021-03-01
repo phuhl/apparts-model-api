@@ -15,6 +15,7 @@ const {
   getPool,
   checkType,
   allChecked,
+  error,
 } = require("@apparts/backend-test")({
   testName: "getByIds",
   apiContainer: methods.get,
@@ -73,6 +74,28 @@ describe("getByIds", () => {
     ]);
     expect(response.body.length).toBe(2);
     checkType(response, fName);
+  });
+});
+
+describe("Check authorization", () => {
+  const path = "/v/1/modelauth";
+  addCrud(
+    path,
+    app,
+    useModel,
+    { getByIds: () => false },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
+
+  test("Should not grant access on no permission", async () => {
+    const responseGetById = await request(app)
+      .get(path + "/" + JSON.stringify([4]))
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseGetById.status).toBe(403);
+    expect(responseGetById.body).toMatchObject(
+      error("You don't have the rights to retrieve this.")
+    );
+    checkType(responseGetById, fName);
   });
 });
 

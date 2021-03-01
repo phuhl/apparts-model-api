@@ -1,4 +1,4 @@
-const { createParams, nameFromPrefix } = require("./common");
+const { createParams, nameFromPrefix, checkAuth } = require("./common");
 const { IsReference } = require("@apparts/model");
 const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
@@ -11,7 +11,14 @@ const generateDelete = (prefix, useModel, authF, webtokenkey) => {
         ids: { type: "array_id" },
       },
     },
-    async ({ dbs, params: { ids, ...restParams } }) => {
+    async (req, me) => {
+      await checkAuth(authF, req, me);
+
+      const {
+        dbs,
+        params: { ids, ...restParams },
+      } = req;
+
       if (ids.length === 0) {
         return "ok";
       }
@@ -35,6 +42,7 @@ const generateDelete = (prefix, useModel, authF, webtokenkey) => {
       title: "Get " + nameFromPrefix(prefix) + " by Ids",
       returns: [
         { status: 200, value: "ok" },
+        { status: 403, error: "You don't have the rights to retrieve this." },
         {
           status: 412,
           error: "Could not delete as other items reference this item",

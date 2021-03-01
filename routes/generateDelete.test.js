@@ -123,6 +123,28 @@ describe("Delete", () => {
   });
 });
 
+describe("Check authorization", () => {
+  const path = "/v/1/modelauth";
+  addCrud(
+    path,
+    app,
+    useModel,
+    { delete: () => false },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
+
+  test("Should not grant access on no permission", async () => {
+    const responseDel = await request(app)
+      .delete(path + "/" + JSON.stringify([4]))
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseDel.status).toBe(403);
+    expect(responseDel.body).toMatchObject(
+      error("You don't have the rights to retrieve this.")
+    );
+    checkType(responseDel, fName);
+  });
+});
+
 describe("Delete subresources", () => {
   const path = "/v/1/model/:modelId/submodel";
   addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");

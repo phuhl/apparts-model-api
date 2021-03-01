@@ -118,7 +118,9 @@ describe("Get", () => {
       )
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(error("Filter not valid"));
+    expect(response.body).toMatchObject(
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
+    );
     checkType(response, fName);
   });
 
@@ -132,7 +134,7 @@ describe("Get", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error("Filter could not be applied to field", '"dummy" does not exist')
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     checkType(response, fName);
   });
@@ -147,7 +149,7 @@ describe("Get", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error("Filter-operator not known", 'Unknown operators: "gt"')
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     checkType(response, fName);
   });
@@ -194,11 +196,11 @@ describe("Get", () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error("Filter-Like operator can only be applied to strings")
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     expect(response2.status).toBe(400);
     expect(response2.body).toMatchObject(
-      error("Filter-Like operator can only be applied to strings")
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     checkType(response, fName);
   });
@@ -213,10 +215,7 @@ describe("Get", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error(
-        "Filter could not be applied to field",
-        '"hasDefault" does not exist'
-      )
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     checkType(response, fName);
   });
@@ -231,10 +230,7 @@ describe("Get", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error(
-        "Filter could not be applied to field",
-        'Parameter "optionalVal" has wrong type'
-      )
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     checkType(response, fName);
   });
@@ -249,10 +245,7 @@ describe("Get", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response.status).toBe(400);
     expect(response.body).toMatchObject(
-      error(
-        "Filter could not be applied to field",
-        'Parameter "someNumber" has wrong type'
-      )
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     checkType(response, fName);
   });
@@ -285,6 +278,28 @@ describe("Get", () => {
     expect(response.body.length).toBe(1);
     expect(response.status).toBe(200);
     checkType(response, fName);
+  });
+});
+
+describe("Check authorization", () => {
+  const path = "/v/1/modelauth";
+  addCrud(
+    path,
+    app,
+    useModel,
+    { get: () => false },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
+
+  test("Should not grant access on no permission", async () => {
+    const responseGet = await request(app)
+      .get(path)
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseGet.status).toBe(403);
+    expect(responseGet.body).toMatchObject(
+      error("You don't have the rights to retrieve this.")
+    );
+    checkType(responseGet, fName);
   });
 });
 
@@ -342,7 +357,7 @@ describe("get subresources", () => {
       .set("Authorization", "Bearer " + jwt());
     expect(response3.status).toBe(400);
     expect(response3.body).toMatchObject(
-      error("Filter cannot be in the path, too", 'param: "modelId"')
+      error("Fieldmissmatch", 'expected object for field "filter" in query')
     );
     checkType(response3, fName);
   });

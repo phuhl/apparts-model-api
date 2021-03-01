@@ -198,6 +198,30 @@ describe("Post", () => {
   });
 });
 
+describe("Check authorization", () => {
+  const path = "/v/1/modelauth";
+  addCrud(
+    path,
+    app,
+    useModel,
+    { post: () => false },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
+
+  test("Should not grant access on no permission", async () => {
+    const responsePost = await request(app)
+      .post(path)
+      .send({ someNumber: 99 })
+      .set("Authorization", "Bearer " + jwt());
+    expect(responsePost.status).toBe(403);
+    expect(responsePost.body).toMatchObject(
+      error("You don't have the rights to retrieve this.")
+    );
+
+    checkType(responsePost, fName);
+  });
+});
+
 describe("Post multikey", () => {
   const path = "/v/1/multimodel";
   addCrud(path, app, useMultiModel, auth, "rsoaietn0932lyrstenoie3nrst");

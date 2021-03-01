@@ -266,6 +266,29 @@ describe("Put", () => {
   });
 });
 
+describe("Check authorization", () => {
+  const path = "/v/1/modelauth";
+  addCrud(
+    path,
+    app,
+    useModel,
+    { put: () => false },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
+
+  test("Should not grant access on no permission", async () => {
+    const responsePut = await request(app)
+      .put(path + "/4")
+      .send({ someNumber: 99 })
+      .set("Authorization", "Bearer " + jwt());
+    expect(responsePut.status).toBe(403);
+    expect(responsePut.body).toMatchObject(
+      error("You don't have the rights to retrieve this.")
+    );
+    checkType(responsePut, fName);
+  });
+});
+
 describe("Put subresources", () => {
   const path = "/v/1/model/:modelId/submodel";
   addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");

@@ -3,6 +3,7 @@ const {
   nameFromPrefix,
   reverseMap,
   createBody,
+  checkAuth,
 } = require("./common");
 const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
@@ -18,7 +19,11 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
         ...createBody(prefix, useModel),
       },
     },
-    async ({ dbs, params, body }) => {
+    async (req, me) => {
+      await checkAuth(authF, req, me);
+
+      const { dbs, params } = req;
+      let { body } = req;
       const [, One] = useModel(dbs);
 
       const types = One.getTypes();
@@ -90,6 +95,7 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
           error: "Could not alter item because it would change a path id",
         },
         { status: 404, error: nameFromPrefix(prefix) + " not found" },
+        { status: 403, error: "You don't have the rights to retrieve this." },
       ],
     }
   );

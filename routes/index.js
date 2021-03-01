@@ -23,7 +23,7 @@ const generateMethods = (prefix, useModel, accessorFs, webtokenkey) => {
     res.get["/:ids"] = generateGetByIds(
       prefix,
       useModel,
-      accessorFs.get,
+      accessorFs.getByIds,
       webtokenkey
     );
   }

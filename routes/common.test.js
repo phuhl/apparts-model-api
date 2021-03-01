@@ -1,6 +1,31 @@
-const { app, url, error, getPool } = require("@apparts/backend-test")({
+const { useModel } = require("../tests/model.js");
+const {
+  addCrud,
+  accessLogic: { anybody, and, andS, or, orS },
+} = require("../");
+const { generateMethods } = require("./");
+const methods = generateMethods(
+  "/v/1/model",
+  useModel,
+  {
+    get: anybody,
+    getByIds: anybody,
+    post: anybody,
+    put: anybody,
+    delete: anybody,
+  },
+  ""
+);
+
+const { app, error, checkType } = require("@apparts/backend-test")({
   testName: "common",
-  apiContainer: { dummy: 1 },
+  apiContainer: {
+    get: methods.get[""],
+    getByIds: methods.get["/:ids"],
+    post: methods.post[""],
+    put: methods.put["/:id"],
+    delete: methods.delete["/:ids"],
+  },
   apiVersion: 1,
   schemas: [
     `
@@ -13,263 +38,398 @@ const { app, url, error, getPool } = require("@apparts/backend-test")({
   ],
 });
 const request = require("supertest");
-const { useChecks } = require("@apparts/types");
-const { checkJWT, jwt } = require("../tests/checkJWT");
-const { Model, useModel } = require("../tests/model.js");
-const {
-  addCrud,
-  accessLogic: { anybody },
-} = require("../");
-const { generateMethods } = require("./");
+const { jwt } = require("../tests/checkJWT");
+
+describe("No functions", () => {
+  const path = "/v/1/model1";
+  addCrud(path, app, useModel, {}, "rsoaietn0932lyrstenoie3nrst");
+
+  test("Should not generate any function", async () => {
+    const responsePost = await request(app)
+      .post(path)
+      .send({ someNumber: 99 })
+      .set("Authorization", "Bearer " + jwt());
+    expect(responsePost.status).toBe(404);
+    expect(responsePost.get("Content-Type")).toBe("text/html; charset=utf-8");
+
+    const responseGet = await request(app)
+      .get(path)
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseGet.status).toBe(404);
+    expect(responseGet.get("Content-Type")).toBe("text/html; charset=utf-8");
+
+    const responseGetById = await request(app)
+      .get(path + "/" + JSON.stringify([4]))
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseGetById.status).toBe(404);
+    expect(responseGetById.get("Content-Type")).toBe(
+      "text/html; charset=utf-8"
+    );
+
+    const responsePut = await request(app)
+      .put(path + "/4")
+      .send({ someNumber: 99 })
+      .set("Authorization", "Bearer " + jwt());
+    expect(responsePut.status).toBe(404);
+    expect(responsePut.get("Content-Type")).toBe("text/html; charset=utf-8");
+
+    const responseDel = await request(app)
+      .delete(path + "/" + JSON.stringify([4]))
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseDel.status).toBe(404);
+    expect(responseDel.get("Content-Type")).toBe("text/html; charset=utf-8");
+  });
+});
 
 describe("Anybody", () => {
-  const path = "/v/1/model",
-    auth = { get: anybody };
-  addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
-  const methods = generateMethods(path, useModel, auth, "");
-  const fName = "";
-  const { checkType } = useChecks(methods.get);
-  checkJWT(() => request(app).get(url("model")), "", checkType);
+  const path = "/v/1/model2";
+  addCrud(
+    path,
+    app,
+    useModel,
+    {
+      get: anybody,
+      getByIds: anybody,
+      post: anybody,
+      put: anybody,
+      delete: anybody,
+    },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
 
-  test("Get all", async () => {
-    const dbs = getPool();
-    const model1 = await new Model(dbs, {
-      mapped: 10,
-      optionalVal: "test",
-    }).store();
-    const model2 = await new Model(dbs, { mapped: 11 }).store();
-    const response = await request(app)
-      .get(url("model"))
+  test("Should grant access to anybody on all functions", async () => {
+    const responsePost = await request(app)
+      .post(path)
+      .send({ someNumber: 99 })
       .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(200);
-    expect(response.body).toMatchObject([
-      {
-        id: model1.content.id,
-        someNumber: 10,
-        optionalVal: "test",
-      },
-      {
-        id: model2.content.id,
-        someNumber: 11,
-      },
-    ]);
-    checkType(response, fName);
+    expect(responsePost.status).toBe(200);
+    checkType(responsePost, "post");
+
+    const responseGet = await request(app)
+      .get(path)
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseGet.status).toBe(200);
+    checkType(responseGet, "get");
+
+    const responseGetById = await request(app)
+      .get(path + "/" + JSON.stringify([responsePost.body]))
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseGetById.status).toBe(200);
+    checkType(responseGetById, "getByIds");
+
+    const responsePut = await request(app)
+      .put(path + "/" + responsePost.body)
+      .send({ someNumber: 99 })
+      .set("Authorization", "Bearer " + jwt());
+    expect(responsePut.status).toBe(200);
+    checkType(responsePut, "put");
+
+    const responseDel = await request(app)
+      .delete(path + "/" + JSON.stringify([responsePost.body]))
+      .set("Authorization", "Bearer " + jwt());
+    expect(responseDel.status).toBe(200);
+    checkType(responseDel, "delete");
   });
+});
 
-  test("Get paginated", async () => {
-    const dbs = getPool();
-    const model1 = await new Model(dbs, { mapped: 20 }).store();
-    const response = await request(app)
-      .get(url("model", { limit: 2 }))
+describe("accessFunc return values", () => {
+  const path = "/v/1/model3";
+  addCrud(
+    path,
+    app,
+    useModel,
+    {
+      get: async () => new Promise((res) => setTimeout(() => res(true), 100)),
+      getByIds: async () =>
+        new Promise((res) => setTimeout(() => res(false), 100)),
+    },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
+
+  test("Should accpet with Promise", async () => {
+    const responseGet = await request(app)
+      .get(path)
       .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(200);
-
-    expect(response.body).toMatchObject([
-      {
-        someNumber: 10,
-        optionalVal: "test",
-      },
-      {
-        someNumber: 11,
-      },
-    ]);
-
-    const response2 = await request(app)
-      .get(url("model", { limit: 2, offset: 2 }))
-      .set("Authorization", "Bearer " + jwt());
-    expect(response2.status).toBe(200);
-    expect(response2.body).toMatchObject([
-      {
-        id: model1.content.id,
-        someNumber: 20,
-      },
-    ]);
-    const response3 = await request(app)
-      .get(url("model", { limit: 2, offset: 4 }))
-      .set("Authorization", "Bearer " + jwt());
-    expect(response3.status).toBe(200);
-    expect(response3.body).toMatchObject([]);
-
-    checkType(response, fName);
-    checkType(response2, fName);
-    checkType(response3, fName);
+    expect(responseGet.status).toBe(200);
+    checkType(responseGet, "get");
   });
-
-  test("Get with malformated filter", async () => {
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: "garbidge",
-        })
-      )
+  test("Should reject with Promise", async () => {
+    const responseGetById = await request(app)
+      .get(path + "/" + JSON.stringify([4]))
       .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(error("Filter not valid"));
-    checkType(response, fName);
-  });
-
-  test("Get with filter with unknown keys", async () => {
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ dummy: 33 }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(
-      error("Filter could not be applied to field", '"dummy" does not exist')
+    expect(responseGetById.status).toBe(403);
+    expect(responseGetById.body).toMatchObject(
+      error("You don't have the rights to retrieve this.")
     );
-    checkType(response, fName);
+    checkType(responseGetById, "getByIds");
   });
+});
 
-  test("Get with filter with unknown operator", async () => {
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ optionalVal: { gt: 30 } }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(
-      error("Filter-operator not known", 'Unknown operators: "gt"')
-    );
-    checkType(response, fName);
-  });
-
-  test("Get with filter on mapped type", async () => {
-    const dbs = getPool();
-    const model1 = await new Model(dbs, {
-      mapped: 30,
-    }).store();
-
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ someNumber: 30 }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    expect(response.body).toMatchObject([
-      {
-        id: model1.content.id,
-        someNumber: 30,
+describe("accessFunc should have request, dbs, me", () => {
+  const path = "/v/1/model4";
+  addCrud(
+    path,
+    app,
+    useModel,
+    {
+      get: async ({ dbs }, me) => {
+        await dbs.raw("SELECT 3");
+        return me.name === "Norris";
       },
-    ]);
-    expect(response.status).toBe(200);
-    expect(response.body.length).toBe(1);
-    checkType(response, fName);
+    },
+    "rsoaietn0932lyrstenoie3nrst"
+  );
+
+  test("Should accpet with correct name", async () => {
+    const responseGet = await request(app)
+      .get(path)
+      .set("Authorization", "Bearer " + jwt({ name: "Norris" }));
+    expect(responseGet.status).toBe(200);
+    checkType(responseGet, "get");
   });
-
-  test("Get with filter with like operator on non-string", async () => {
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ someNumber: { like: "test" } }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    const response2 = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ optionalVal: { like: 30 } }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-
-    expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(
-      error("Filter-Like operator can only be applied to strings")
-    );
-    expect(response2.status).toBe(400);
-    expect(response2.body).toMatchObject(
-      error("Filter-Like operator can only be applied to strings")
-    );
-    checkType(response, fName);
+  test("Should reject with wrong name", async () => {
+    const responseGet = await request(app)
+      .get(path)
+      .set("Authorization", "Bearer " + jwt({ name: "Duck" }));
+    expect(responseGet.status).toBe(403);
+    checkType(responseGet, "get");
   });
+});
 
-  test("Get with filter on non-public type", async () => {
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ hasDefault: 30 }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(
-      error(
-        "Filter could not be applied to field",
-        '"hasDefault" does not exist'
-      )
-    );
-    checkType(response, fName);
-  });
-
-  test("Get with filter wrong type", async () => {
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ optionalVal: 77 }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(
-      error(
-        "Filter could not be applied to field",
-        'Parameter "optionalVal" has wrong type'
-      )
-    );
-    checkType(response, fName);
-  });
-
-  test("Get with mapped filter wrong type", async () => {
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: JSON.stringify({ someNumber: "77" }),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    expect(response.status).toBe(400);
-    expect(response.body).toMatchObject(
-      error(
-        "Filter could not be applied to field",
-        'Parameter "someNumber" has wrong type'
-      )
-    );
-    checkType(response, fName);
-  });
-
-  test("Get filtered", async () => {
-    const dbs = getPool();
-    await new Model(dbs, {
-      mapped: 30,
-      optionalVal: "cheap",
-    }).store();
-    const model2 = await new Model(dbs, {
-      mapped: 11,
-      optionalVal: "dirty",
-    }).store();
-    const response = await request(app)
-      .get(
-        url("model", {
-          filter: encodeURIComponent(
-            JSON.stringify({ optionalVal: { like: "%rty" } })
-          ),
-        })
-      )
-      .set("Authorization", "Bearer " + jwt());
-    expect(response.body).toMatchObject([
-      {
-        id: model2.content.id,
-        optionalVal: "dirty",
+describe("and", () => {
+  test("Should give true", async () => {
+    const res = await and(
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
       },
-    ]);
-    expect(response.body.length).toBe(1);
-    expect(response.status).toBe(200);
-    checkType(response, fName);
+      () => true,
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
+      }
+    )({ iAmHere: true }, { iAmHereToo: true });
+    expect(res).toBe(true);
+  });
+
+  test("Should give false", async () => {
+    const res = await and(
+      () => false,
+      () => true,
+      () => true
+    )();
+    expect(res).toBe(false);
+    const res2 = await and(
+      () => true,
+      () => false,
+      () => true
+    )();
+    expect(res2).toBe(false);
+    const res3 = await and(
+      () => true,
+      () => true,
+      () => false
+    )();
+    expect(res3).toBe(false);
+    const res4 = await and(
+      () => false,
+      () => false,
+      () => false
+    )();
+    expect(res4).toBe(false);
+  });
+
+  test("Should be true with promise", async () => {
+    const res = await and(
+      async () => new Promise((res) => setTimeout(() => res(true), 10))
+    )();
+    expect(res).toBe(true);
+  });
+  test("Should be false with promise", async () => {
+    const res = await and(
+      async () => new Promise((res) => setTimeout(() => res(true), 10)),
+      async () => new Promise((res) => setTimeout(() => res(false), 20))
+    )();
+    expect(res).toBe(false);
+  });
+});
+
+describe("andS", () => {
+  test("Should give true", async () => {
+    const res = await andS(
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
+      },
+      () => true,
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
+      }
+    )({ iAmHere: true }, { iAmHereToo: true });
+    expect(res).toBe(true);
+  });
+
+  test("Should give false", async () => {
+    const res = await andS(
+      () => false,
+      () => true,
+      () => true
+    )();
+    expect(res).toBe(false);
+    const res2 = await andS(
+      () => true,
+      () => false,
+      () => true
+    )();
+    expect(res2).toBe(false);
+    const res3 = await andS(
+      () => true,
+      () => true,
+      () => false
+    )();
+    expect(res3).toBe(false);
+    const res4 = await andS(
+      () => false,
+      () => false,
+      () => false
+    )();
+    expect(res4).toBe(false);
+  });
+
+  test("Should be true with promise", async () => {
+    const res = await andS(
+      async () => new Promise((res) => setTimeout(() => res(true), 10))
+    )();
+    expect(res).toBe(true);
+  });
+  test("Should be false with promise", async () => {
+    const res = await andS(
+      async () => new Promise((res) => setTimeout(() => res(true), 10)),
+      async () => new Promise((res) => setTimeout(() => res(false), 20))
+    )();
+    expect(res).toBe(false);
+  });
+});
+
+describe("or", () => {
+  test("Should pass on parameters", async () => {
+    const res = await or(
+      () => false,
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
+      }
+    )({ iAmHere: true }, { iAmHereToo: true });
+    expect(res).toBe(true);
+    const res2 = await or(
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
+      },
+      () => false
+    )({ iAmHere: true }, { iAmHereToo: true });
+    expect(res2).toBe(true);
+  });
+
+  test("Should give true", async () => {
+    const res = await or(
+      () => false,
+      () => true,
+      () => true
+    )();
+    expect(res).toBe(true);
+    const res2 = await or(
+      () => true,
+      () => false,
+      () => true
+    )();
+    expect(res2).toBe(true);
+    const res3 = await or(
+      () => true,
+      () => true,
+      () => false
+    )();
+    expect(res3).toBe(true);
+  });
+
+  test("Should give false", async () => {
+    const res = await or(
+      () => false,
+      () => false,
+      () => false
+    )();
+    expect(res).toBe(false);
+  });
+
+  test("Should be true with promise", async () => {
+    const res = await or(
+      async () => new Promise((res) => setTimeout(() => res(false), 10)),
+      async () => new Promise((res) => setTimeout(() => res(true), 20))
+    )();
+    expect(res).toBe(true);
+  });
+  test("Should be false with promise", async () => {
+    const res = await or(
+      async () => new Promise((res) => setTimeout(() => res(false), 10))
+    )();
+    expect(res).toBe(false);
+  });
+});
+
+describe("orS", () => {
+  test("Should pass on parameters", async () => {
+    const res = await orS(
+      () => false,
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
+      }
+    )({ iAmHere: true }, { iAmHereToo: true });
+    expect(res).toBe(true);
+    const res2 = await orS(
+      (a, b) => {
+        return a.iAmHere && b.iAmHereToo;
+      },
+      () => false
+    )({ iAmHere: true }, { iAmHereToo: true });
+    expect(res2).toBe(true);
+  });
+
+  test("Should give true", async () => {
+    const res = await orS(
+      () => false,
+      () => true,
+      () => true
+    )();
+    expect(res).toBe(true);
+    const res2 = await orS(
+      () => true,
+      () => false,
+      () => true
+    )();
+    expect(res2).toBe(true);
+    const res3 = await orS(
+      () => true,
+      () => true,
+      () => false
+    )();
+    expect(res3).toBe(true);
+  });
+
+  test("Should give false", async () => {
+    const res = await orS(
+      () => false,
+      () => false,
+      () => false
+    )();
+    expect(res).toBe(false);
+  });
+
+  test("Should be true with promise", async () => {
+    const res = await orS(
+      async () => new Promise((res) => setTimeout(() => res(false), 10)),
+      async () => new Promise((res) => setTimeout(() => res(true), 20))
+    )();
+    expect(res).toBe(true);
+  });
+  test("Should be false with promise", async () => {
+    const res = await orS(
+      async () => new Promise((res) => setTimeout(() => res(false), 10))
+    )();
+    expect(res).toBe(false);
   });
 });

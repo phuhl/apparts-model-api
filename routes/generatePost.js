@@ -3,6 +3,7 @@ const {
   createBody,
   nameFromPrefix,
   reverseMap,
+  checkAuth,
 } = require("./common");
 const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
@@ -18,7 +19,12 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
         ...createBody(prefix, useModel),
       },
     },
-    async ({ dbs, params, body }) => {
+    async (req, me) => {
+      await checkAuth(authF, req, me);
+
+      const { dbs, params } = req;
+      let { body } = req;
+
       const [, One] = useModel(dbs);
 
       const types = One.getTypes();
@@ -64,6 +70,7 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
             "Could not create item because your request had too many parameters",
         },
         { status: 412, error: "Could not create item because it exists" },
+        { status: 403, error: "You don't have the rights to retrieve this." },
       ],
     }
   );
