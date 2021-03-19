@@ -57,6 +57,10 @@ const {
   AdvancedModel,
   useAdvancedModel,
 } = require("../tests/advancedmodel.js");
+const {
+  ModelWithDefault,
+  useModelWithDefault,
+} = require("../tests/modelWithDefault.js");
 
 describe("Post", () => {
   const path = "/v/1/model";
@@ -204,6 +208,54 @@ describe("Post", () => {
         '"id" does not exist'
       )
     );
+    checkType(response, fName);
+  });
+});
+
+describe("Post", () => {
+  const path = "/v/1/model2";
+  addCrud(path, app, useModelWithDefault, auth, "rsoaietn0932lyrstenoie3nrst");
+
+  checkJWT(
+    () => request(app).post(url("model")).send({ someNumber: 3 }),
+    fName,
+    checkType
+  );
+  test("Should post with default", async () => {
+    const dbs = getPool();
+    const response = await request(app)
+      .post(url("model2"))
+      .send({
+        someNumber: 100,
+        hasDefault: 9,
+      })
+      .set("Authorization", "Bearer " + jwt());
+    const model = await new Model(dbs).load({ mapped: 100 });
+    expect(response.body).toBe(model.content.id);
+    expect(response.status).toBe(200);
+    expect(model.content).toMatchObject({
+      mapped: 100,
+      hasDefault: 9,
+      optionalVal: null,
+    });
+    checkType(response, fName);
+  });
+  test("Should post without default", async () => {
+    const dbs = getPool();
+    const response = await request(app)
+      .post(url("model2"))
+      .send({
+        someNumber: 101,
+      })
+      .set("Authorization", "Bearer " + jwt());
+    const model = await new Model(dbs).load({ mapped: 101 });
+    expect(response.body).toBe(model.content.id);
+    expect(response.status).toBe(200);
+    expect(model.content).toMatchObject({
+      mapped: 101,
+      hasDefault: 7,
+      optionalVal: null,
+    });
     checkType(response, fName);
   });
 });
