@@ -7,6 +7,30 @@ const checkAuth = async (authF, res, me) => {
   }
 };
 
+const typeFromModeltype = (tipe) => {
+  const res = {
+    type: tipe.type,
+  };
+
+  if (tipe.items) {
+    res.items = tipe.items;
+  }
+  if (tipe.keys) {
+    res.keys = tipe.keys;
+  }
+  if (tipe.values) {
+    res.values = tipe.values;
+  }
+  if (tipe.value) {
+    res.value = tipe.value;
+  }
+  if (tipe.optional) {
+    res.optional = tipe.optional;
+  }
+
+  return res;
+};
+
 const createParams = (prefix, useModel) => {
   const [Models] = useModel();
   const pathParams = prefix
@@ -38,7 +62,7 @@ const createBody = (prefix, useModel) => {
         name = tipe.mapped;
       }
       if (!params[key]) {
-        bodyParams[name] = { type: tipe.type };
+        bodyParams[name] = typeFromModeltype(tipe);
       }
       if (tipe.optional === true) {
         bodyParams[name].optional = true;
@@ -69,7 +93,7 @@ const createReturns = (useModel) => {
       if (tipe.mapped) {
         name = tipe.mapped;
       }
-      returns[name] = { type: tipe.type };
+      returns[name] = typeFromModeltype(tipe);
       if (tipe.optional) {
         returns[name].optional = true;
       }
@@ -104,4 +128,5 @@ module.exports = {
   nameFromPrefix,
   createReturns,
   reverseMap,
+  typeFromModeltype,
 };

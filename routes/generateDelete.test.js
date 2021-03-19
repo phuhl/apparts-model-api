@@ -21,25 +21,37 @@ const {
   apiContainer: methods.delete,
   schemas: [
     `
-    CREATE TABLE model (
-      id SERIAL PRIMARY KEY,
-      "optionalVal" TEXT,
-      "hasDefault" INT NOT NULL,
-      mapped INT NOT NULL
-    );
+CREATE TABLE model (
+  id SERIAL PRIMARY KEY,
+  "optionalVal" TEXT,
+  "hasDefault" INT NOT NULL,
+  mapped INT NOT NULL
+);
 
-    CREATE TABLE submodel (
-      id SERIAL PRIMARY KEY,
-      "modelId" INT NOT NULL,
-      opt TEXT,
-      FOREIGN KEY ("modelId") REFERENCES model(id)
-);      `,
+CREATE TABLE submodel (
+  id SERIAL PRIMARY KEY,
+  "modelId" INT NOT NULL,
+  opt TEXT,
+  FOREIGN KEY ("modelId") REFERENCES model(id)
+);
+
+CREATE TABLE advancedmodel (
+  id SERIAL PRIMARY KEY,
+  textarray text[],
+  object json,
+  jsonarray json
+);`,
   ],
   apiVersion: 1,
 });
 const request = require("supertest");
 const { checkJWT, jwt } = require("../tests/checkJWT");
 const { SubModel, NoSubModel, useSubModel } = require("../tests/submodel.js");
+const {
+  AdvancedModel,
+  NoAdvancedModel,
+  useAdvancedModel,
+} = require("../tests/advancedmodel.js");
 
 describe("Delete", () => {
   const path = "/v/1/model";
@@ -211,6 +223,29 @@ describe("Delete subresources", () => {
       id: model.content.id,
       mapped: model.content.mapped,
     });
+    checkType(response, fName);
+  });
+});
+
+describe("delete advanced model", () => {
+  const path = "/v/1/advancedmodel";
+  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+
+  test("Should delete model", async () => {
+    const dbs = getPool();
+
+    const model1 = await new AdvancedModel(dbs, {
+      textarray: ["erster", "zweiter"],
+      object: { a: 22, bcd: "jup" },
+    }).store();
+
+    const response = await request(app)
+      .delete(url(`advancedmodel/` + JSON.stringify([model1.content.id])))
+      .set("Authorization", "Bearer " + jwt());
+
+    await new NoAdvancedModel(dbs).loadNone({});
+    expect(response.status).toBe(200);
+    expect(response.body).toBe("ok");
     checkType(response, fName);
   });
 });

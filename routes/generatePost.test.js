@@ -23,12 +23,12 @@ const {
   apiVersion: 1,
   schemas: [
     `
-    CREATE TABLE model (
-      id SERIAL PRIMARY KEY,
-      "optionalVal" TEXT,
-      "hasDefault" INT NOT NULL,
-      mapped INT NOT NULL
-    );
+CREATE TABLE model (
+  id SERIAL PRIMARY KEY,
+  "optionalVal" TEXT,
+  "hasDefault" INT NOT NULL,
+  mapped INT NOT NULL
+);
 
 CREATE TABLE multikey (
   id INT NOT NULL,
@@ -40,13 +40,23 @@ CREATE TABLE submodel (
   id SERIAL PRIMARY KEY,
   "modelId" INT NOT NULL,
   FOREIGN KEY ("modelId") REFERENCES model(id)
-);      `,
+);
+
+CREATE TABLE advancedmodel (
+  id SERIAL PRIMARY KEY,
+  textarray text[],
+  object json
+);`,
   ],
 });
 const request = require("supertest");
 const { checkJWT, jwt } = require("../tests/checkJWT");
 const { SubModel, useSubModel } = require("../tests/submodel.js");
 const { MultiModel, useMultiModel } = require("../tests/multiKeyModel.js");
+const {
+  AdvancedModel,
+  useAdvancedModel,
+} = require("../tests/advancedmodel.js");
 
 describe("Post", () => {
   const path = "/v/1/model";
@@ -277,6 +287,32 @@ describe("Post subresources", () => {
     expect(submodel.content).toMatchObject({
       id: submodel.content.id,
       modelId: model1.content.id,
+    });
+    checkType(response, fName);
+  });
+});
+
+describe("post advanced model", () => {
+  const path = "/v/1/advancedmodel";
+  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+
+  test("Should create model", async () => {
+    const dbs = getPool();
+
+    const response = await request(app)
+      .post(url(`advancedmodel`))
+      .send({
+        textarray: ["dritter", "vierter"],
+        object: { a: 23, bcd: "nope" },
+      })
+      .set("Authorization", "Bearer " + jwt());
+    const modelNew = await new AdvancedModel(dbs).load({});
+    expect(response.status).toBe(200);
+    expect(response.body).toBe(modelNew.content.id);
+
+    expect(modelNew.content).toMatchObject({
+      textarray: ["dritter", "vierter"],
+      object: { a: 23, bcd: "nope" },
     });
     checkType(response, fName);
   });

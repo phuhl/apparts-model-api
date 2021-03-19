@@ -38,6 +38,12 @@ CREATE TABLE submodel (
   "modelId" INT NOT NULL,
   opt TEXT,
   FOREIGN KEY ("modelId") REFERENCES model(id)
+);
+
+CREATE TABLE advancedmodel (
+  id SERIAL PRIMARY KEY,
+  textarray text[],
+  object json
 );`,
   ],
   apiVersion: 1,
@@ -45,6 +51,10 @@ CREATE TABLE submodel (
 const request = require("supertest");
 const { checkJWT, jwt } = require("../tests/checkJWT");
 const { SubModel, useSubModel } = require("../tests/submodel.js");
+const {
+  AdvancedModel,
+  useAdvancedModel,
+} = require("../tests/advancedmodel.js");
 
 describe("Put", () => {
   const path = "/v/1/model";
@@ -336,6 +346,35 @@ describe("Put subresources", () => {
       modelId: model1.content.id,
     });
     expect(submodel.content.opt).toBeFalsy();
+    checkType(response, fName);
+  });
+});
+
+describe("put advanced model", () => {
+  const path = "/v/1/advancedmodel";
+  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+
+  test("Should update model", async () => {
+    const dbs = getPool();
+    const model1 = await new AdvancedModel(dbs, {
+      textarray: ["erster", "zweiter"],
+      object: { a: 22, bcd: "jup" },
+    }).store();
+
+    const response = await request(app)
+      .put(url(`advancedmodel/` + model1.content.id))
+      .send({
+        textarray: ["dritter", "vierter"],
+        object: { a: 23, bcd: "nope" },
+      })
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.status).toBe(200);
+    expect(response.body).toBe(model1.content.id);
+    const modelNew = await new AdvancedModel(dbs).loadById(model1.content.id);
+    expect(modelNew.content).toMatchObject({
+      textarray: ["dritter", "vierter"],
+      object: { a: 23, bcd: "nope" },
+    });
     checkType(response, fName);
   });
 });

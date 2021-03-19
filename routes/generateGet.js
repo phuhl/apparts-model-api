@@ -4,6 +4,7 @@ const {
   createReturns,
   reverseMap,
   checkAuth,
+  typeFromModeltype,
 } = require("./common");
 const { prepauthTokenJWT } = require("@apparts/types");
 
@@ -20,9 +21,11 @@ const createFilter = (prefix, useModel) => {
         name = tipe.mapped;
       }
       if (!params[key]) {
+        const convertedType = typeFromModeltype(tipe);
+        delete convertedType.optional;
         filter.keys[name] = {
           type: "oneOf",
-          alternatives: [{ type: tipe.type }],
+          alternatives: [convertedType],
           optional: true,
         };
         if (tipe.type === "string") {

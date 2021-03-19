@@ -33,13 +33,23 @@ CREATE TABLE submodel (
   id SERIAL PRIMARY KEY,
   "modelId" INT NOT NULL,
   FOREIGN KEY ("modelId") REFERENCES model(id)
-);      `,
+);
+
+CREATE TABLE advancedmodel (
+  id SERIAL PRIMARY KEY,
+  textarray text[],
+  object json
+);`,
   ],
 });
 
 const request = require("supertest");
 const { checkJWT, jwt } = require("../tests/checkJWT");
 const { SubModel, useSubModel } = require("../tests/submodel.js");
+const {
+  AdvancedModel,
+  useAdvancedModel,
+} = require("../tests/advancedmodel.js");
 
 describe("getByIds", () => {
   const path = "/v/1/model";
@@ -164,6 +174,34 @@ describe("getByIds subresources", () => {
     expect(response2.status).toBe(200);
     expect(response2.body).toMatchObject([]);
     expect(response2.body.length).toBe(0);
+    checkType(response, fName);
+  });
+});
+
+describe("getByIds advanced model", () => {
+  const path = "/v/1/advancedmodel";
+  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  const methods2 = generateMethods(path, useAdvancedModel, auth, "");
+
+  test("Should return model", async () => {
+    // This makes allChecked (at the end) think, these tests operate
+    // on the same function as the ones from above. I can't let them
+    // run on the same function as the returns are slightly different.
+    // Little hacky but I don't want to rewrite all tests.
+    methods.get[fName] = methods2.get[fName];
+
+    const dbs = getPool();
+    const model1 = await new AdvancedModel(dbs, {
+      textarray: ["erster", "zweiter"],
+      object: { a: 22, bcd: "jup" },
+    }).store();
+
+    const response = await request(app)
+      .get(url(`advancedmodel/` + JSON.stringify([model1.content.id])))
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject([model1.content]);
+    expect(response.body.length).toBe(1);
     checkType(response, fName);
   });
 });
