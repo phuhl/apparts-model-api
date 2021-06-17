@@ -14,6 +14,7 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
     {
       params: {
         ...createParams(prefix, useModel),
+        id: { type: "id" },
       },
       body: {
         ...createBody(prefix, useModel),
@@ -79,7 +80,7 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
       return model.content.id;
     },
     {
-      title: "Create " + nameFromPrefix(prefix),
+      title: "Alter " + nameFromPrefix(prefix),
       returns: [
         {
           status: 200,
