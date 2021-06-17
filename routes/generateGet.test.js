@@ -119,6 +119,64 @@ describe("Get", () => {
     checkType(response3, fName);
   });
 
+  test("Get ordered", async () => {
+    const response = await request(app)
+      .get(
+        url("model", {
+          order: encodeURIComponent(
+            JSON.stringify([{ key: "id", dir: "DESC" }])
+          ),
+        })
+      )
+      .set("Authorization", "Bearer " + jwt());
+
+    expect(response.body).toMatchObject([
+      {
+        id: 3,
+        someNumber: 20,
+      },
+      {
+        id: 2,
+        someNumber: 11,
+      },
+      {
+        id: 1,
+        someNumber: 10,
+        optionalVal: "test",
+      },
+    ]);
+    expect(response.status).toBe(200);
+
+    const response2 = await request(app)
+      .get(
+        url("model", {
+          order: encodeURIComponent(
+            JSON.stringify([{ key: "someNumber", dir: "DESC" }])
+          ),
+        })
+      )
+      .set("Authorization", "Bearer " + jwt());
+    expect(response2.body).toMatchObject([
+      {
+        id: 3,
+        someNumber: 20,
+      },
+      {
+        id: 2,
+        someNumber: 11,
+      },
+      {
+        id: 1,
+        someNumber: 10,
+        optionalVal: "test",
+      },
+    ]);
+    expect(response2.status).toBe(200);
+
+    checkType(response, fName);
+    checkType(response2, fName);
+  });
+
   test("Get with malformated filter", async () => {
     const response = await request(app)
       .get(

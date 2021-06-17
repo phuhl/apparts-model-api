@@ -121,6 +121,19 @@ const reverseMap = (collection, types) => {
   return mappedCollection;
 };
 
+const unmapKey = (key, types) => {
+  const mappedKey = Object.keys(types).filter(
+    (t) => types[t].mapped === key
+  )[0];
+  if (mappedKey) {
+    return mappedKey;
+  } else if (!types[key] || types[key].mapped) {
+    throw new HttpError(400, '"' + key + '" does not exist');
+  } else {
+    return key;
+  }
+};
+
 module.exports = {
   createParams,
   createBody,
@@ -129,4 +142,5 @@ module.exports = {
   createReturns,
   reverseMap,
   typeFromModeltype,
+  unmapKey,
 };

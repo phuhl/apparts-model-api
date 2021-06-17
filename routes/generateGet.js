@@ -5,6 +5,7 @@ const {
   reverseMap,
   checkAuth,
   typeFromModeltype,
+  unmapKey,
 } = require("./common");
 const { prepauthTokenJWT } = require("@apparts/types");
 
@@ -42,13 +43,50 @@ const createFilter = (prefix, useModel) => {
   return filter;
 };
 
+const createOrder = (useModel) => {
+  const order = {
+    optional: true,
+    type: "array",
+    items: {
+      type: "object",
+      keys: {
+        key: {
+          type: "oneOf",
+          alternatives: [],
+        },
+        dir: {
+          type: "oneOf",
+          alternatives: [{ value: "ASC" }, { value: "DESC" }],
+        },
+      },
+    },
+  };
+  const [Models] = useModel();
+  const types = Models.getTypes();
+  for (const key in types) {
+    const tipe = types[key];
+    let name = key;
+    if (tipe.public) {
+      if (tipe.mapped) {
+        name = tipe.mapped;
+      }
+      const convertedType = typeFromModeltype(tipe);
+      delete convertedType.optional;
+      order.items.keys.key.alternatives.push({
+        value: name,
+      });
+    }
+  }
+  return order;
+};
+
 const generateGet = (prefix, useModel, authF, webtokenkey) => {
   const getF = prepauthTokenJWT(webtokenkey)(
     {
       query: {
         limit: { type: "int", default: 50 },
         offset: { type: "int", default: 0 },
-        order: { type: "string", optional: true },
+        order: createOrder(useModel),
         filter: createFilter(prefix, useModel),
       },
       params: createParams(prefix, useModel),
@@ -58,10 +96,10 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
 
       const {
         dbs,
-        query: { limit, offset, order },
+        query: { limit, offset },
         params,
       } = req;
-      let { filter } = req.query;
+      let { filter, order } = req.query;
 
       const [Many] = useModel(dbs);
       if (filter) {
@@ -74,6 +112,14 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
             }
           }
         }
+      }
+
+      if (order) {
+        const types = Many.getTypes();
+        order = order.map(({ dir, key }) => ({
+          dir,
+          key: unmapKey(key, types),
+        }));
       }
       const res = new Many();
       await res.load({ ...filter, ...params }, limit, offset, order);
