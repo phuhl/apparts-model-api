@@ -4,8 +4,8 @@ const generatePost = require("./generatePost");
 const generatePut = require("./generatePut");
 const generateDelete = require("./generateDelete");
 
-const addCrud = (prefix, app, useModel, accessorFs, webtokenkey) => {
-  const methods = generateMethods(prefix, useModel, accessorFs, webtokenkey);
+const addCrud = ({ prefix, app, model, routes, webtokenkey }) => {
+  const methods = generateMethods(prefix, model, routes, webtokenkey);
 
   Object.keys(methods).forEach((method) =>
     Object.keys(methods[method]).forEach((route) =>
@@ -14,35 +14,30 @@ const addCrud = (prefix, app, useModel, accessorFs, webtokenkey) => {
   );
 };
 
-const generateMethods = (prefix, useModel, accessorFs, webtokenkey) => {
+const generateMethods = (prefix, useModel, routes, webtokenkey) => {
   const res = { get: {}, post: {}, put: {}, delete: {} };
-  if (accessorFs.get) {
-    res.get[""] = generateGet(prefix, useModel, accessorFs.get, webtokenkey);
+  if (routes.get) {
+    res.get[""] = generateGet(prefix, useModel, routes.get, webtokenkey);
   }
-  if (accessorFs.getByIds) {
+  if (routes.getByIds) {
     res.get["/:ids"] = generateGetByIds(
       prefix,
       useModel,
-      accessorFs.getByIds,
+      routes.getByIds,
       webtokenkey
     );
   }
-  if (accessorFs.post) {
-    res.post[""] = generatePost(prefix, useModel, accessorFs.post, webtokenkey);
+  if (routes.post) {
+    res.post[""] = generatePost(prefix, useModel, routes.post, webtokenkey);
   }
-  if (accessorFs.put) {
-    res.put["/:id"] = generatePut(
-      prefix,
-      useModel,
-      accessorFs.put,
-      webtokenkey
-    );
+  if (routes.put) {
+    res.put["/:id"] = generatePut(prefix, useModel, routes.put, webtokenkey);
   }
-  if (accessorFs.delete) {
+  if (routes.delete) {
     res.delete["/:ids"] = generateDelete(
       prefix,
       useModel,
-      accessorFs.delete,
+      routes.delete,
       webtokenkey
     );
   }

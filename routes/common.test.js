@@ -44,7 +44,13 @@ const { jwt } = require("../tests/checkJWT");
 
 describe("No functions", () => {
   const path = "/v/1/model1";
-  addCrud(path, app, useModel, {}, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useModel,
+    routes: {},
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should not generate any function", async () => {
     const responsePost = await request(app)
@@ -85,19 +91,19 @@ describe("No functions", () => {
 
 describe("Anybody", () => {
   const path = "/v/1/model2";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    {
-      get: anybody,
-      getByIds: anybody,
-      post: anybody,
-      put: anybody,
-      delete: anybody,
+    model: useModel,
+    routes: {
+      get: { access: anybody },
+      getByIds: { access: anybody },
+      post: { access: anybody },
+      put: { access: anybody },
+      delete: { access: anybody },
     },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should grant access to anybody on all functions", async () => {
     const responsePost = await request(app)
@@ -136,17 +142,22 @@ describe("Anybody", () => {
 
 describe("accessFunc return values", () => {
   const path = "/v/1/model3";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    {
-      get: async () => new Promise((res) => setTimeout(() => res(true), 100)),
-      getByIds: async () =>
-        new Promise((res) => setTimeout(() => res(false), 100)),
+    model: useModel,
+    routes: {
+      get: {
+        access: async () =>
+          new Promise((res) => setTimeout(() => res(true), 100)),
+      },
+      getByIds: {
+        access: async () =>
+          new Promise((res) => setTimeout(() => res(false), 100)),
+      },
     },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should accpet with Promise", async () => {
     const responseGet = await request(app)
@@ -169,18 +180,20 @@ describe("accessFunc return values", () => {
 
 describe("accessFunc should have request, dbs, me", () => {
   const path = "/v/1/model4";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    {
-      get: async ({ dbs }, me) => {
-        await dbs.raw("SELECT 3");
-        return me.name === "Norris";
+    model: useModel,
+    routes: {
+      get: {
+        access: async ({ dbs }, me) => {
+          await dbs.raw("SELECT 3");
+          return me.name === "Norris";
+        },
       },
     },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should accpet with correct name", async () => {
     const responseGet = await request(app)

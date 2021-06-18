@@ -1,4 +1,5 @@
 const { Model, useModel } = require("../tests/model.js");
+const generatePut = require("./generatePut");
 const {
   addCrud,
   accessLogic: { anybody },
@@ -6,7 +7,7 @@ const {
 const { generateMethods } = require("./");
 
 const fName = "/:id",
-  auth = { put: anybody };
+  auth = { put: { access: anybody } };
 const methods = generateMethods("/v/1/model", useModel, auth, "");
 const {
   app,
@@ -58,7 +59,13 @@ const {
 
 describe("Put", () => {
   const path = "/v/1/model";
-  addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   checkJWT(
     () => request(app).put(url("model/1")).send({ someNumber: 3 }),
@@ -278,13 +285,13 @@ describe("Put", () => {
 
 describe("Check authorization", () => {
   const path = "/v/1/modelauth";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    { put: () => false },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    model: useModel,
+    routes: { put: { access: () => false } },
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should not grant access on no permission", async () => {
     const responsePut = await request(app)
@@ -301,7 +308,13 @@ describe("Check authorization", () => {
 
 describe("Put subresources", () => {
   const path = "/v/1/model/:modelId/submodel";
-  addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useSubModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Put a subresouce", async () => {
     const dbs = getPool();
@@ -352,7 +365,14 @@ describe("Put subresources", () => {
 
 describe("put advanced model", () => {
   const path = "/v/1/advancedmodel";
-  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+
+  addCrud({
+    prefix: path,
+    app,
+    model: useAdvancedModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should update model", async () => {
     const dbs = getPool();
@@ -376,6 +396,22 @@ describe("put advanced model", () => {
       object: { a: 23, bcd: "nope" },
     });
     checkType(response, fName);
+  });
+});
+
+describe("Title and description", () => {
+  test("Should set default title", async () => {
+    const options1 = generatePut("model", useModel, {}, "").options;
+    const options2 = generatePut(
+      "model",
+      useModel,
+      { title: "My title", description: "yay" },
+      ""
+    ).options;
+    expect(options1.description).toBeFalsy();
+    expect(options1.title).toBe("Alter Model");
+    expect(options2.title).toBe("My title");
+    expect(options2.description).toBe("yay");
   });
 });
 

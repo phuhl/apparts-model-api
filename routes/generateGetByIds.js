@@ -6,7 +6,12 @@ const {
 } = require("./common");
 const { prepauthTokenJWT } = require("@apparts/types");
 
-const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
+const generateGetByIds = (
+  prefix,
+  useModel,
+  { access: authF, title, description },
+  webtokenkey
+) => {
   const getF = prepauthTokenJWT(webtokenkey)(
     {
       params: {
@@ -29,7 +34,8 @@ const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
       return res.getPublic();
     },
     {
-      title: "Get " + nameFromPrefix(prefix) + " by Ids",
+      title: title || "Get " + nameFromPrefix(prefix) + " by Ids",
+      description,
       returns: [
         {
           status: 200,

@@ -80,7 +80,12 @@ const createOrder = (useModel) => {
   return order;
 };
 
-const generateGet = (prefix, useModel, authF, webtokenkey) => {
+const generateGet = (
+  prefix,
+  useModel,
+  { access: authF, title, description },
+  webtokenkey
+) => {
   const getF = prepauthTokenJWT(webtokenkey)(
     {
       query: {
@@ -127,7 +132,8 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
       return res.getPublic();
     },
     {
-      title: "Get " + nameFromPrefix(prefix),
+      title: title || "Get " + nameFromPrefix(prefix),
+      description,
       returns: [
         {
           status: 200,

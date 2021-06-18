@@ -16,22 +16,33 @@ npm i --save @apparts/model-api
 To generate CRUD-like API-endpoints for a model, use the =addCrud=
 function.
 
-- =addCrud(<routeprefix>, <app>, <modelGenerator>, <accessFunctions>)=
-  - =routeprefix : string= :: The prefix for the URI, can contain
+- =addCrud({ prefix, app, model, routes, webtokenkey})=
+  - =prefix : string= :: The prefix for the URI, can contain
     parameters (see next section).
   - =app : App= :: The express app
-  - =modelGenerator : function= :: A function that returns an array in
+  - =model : function= :: A function that returns an array in
     the form of =[OneModel, ManyModel, NoneModel]= (as does the
     =makeModel= function from [[https://github.com/phuhl/apparts-model][@apparts/model]] package).
-  - =accessFunctions : object= :: An object that contains functions that
-    define access rights for the individual endpoints. If one of the
-    keys is not present in the object, that route will not be
-    generated. Possible keys are:
+  - =routes : object= :: An object that contains options for the routes
+    to be generated. If one of the keys is not present in the object,
+    that route will not be generated. Possible keys are:
     - =get= :: The get all route
     - =getByIds= :: The get by ids route
     - =post= :: The create item route
     - =put= :: The update item route
     - =delete= :: The delete items route
+    The values for each of these keys are objects, that can contain:
+    - =access : (request, me) => boolean= :: A functions that defines
+      access rights for the individual endpoint. It receives the same
+      parameters as a request handler from [[https://github.com/phuhl/apparts-types][@apparts/types]] receives. It
+      returns a boolean, that decides, if access should be granted or
+      not.
+    - =title : string= :: A custom title for the documentation
+    - =description : string= :: A custom description for the
+      documentation
+  - =webtokenkey : string= :: The key to be used for the JWT
+    verification (done by =prepauth.prepauthTokenJWT= from
+    [[https://github.com/phuhl/apparts-types][@apparts/types]])
 
 #+BEGIN_SRC js
 const { addCrud, accessLogic: { anybody } } = require("@apparts/model");

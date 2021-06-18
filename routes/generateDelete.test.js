@@ -1,4 +1,5 @@
 const { NoModel, Model, useModel } = require("../tests/model.js");
+const generateDelete = require("./generateDelete");
 const {
   addCrud,
   accessLogic: { anybody },
@@ -55,7 +56,13 @@ const {
 
 describe("Delete", () => {
   const path = "/v/1/model";
-  addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   checkJWT(
     () => request(app).delete(url("model/[1]")).send({ someNumber: 3 }),
@@ -137,13 +144,13 @@ describe("Delete", () => {
 
 describe("Check authorization", () => {
   const path = "/v/1/modelauth";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    { delete: () => false },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    model: useModel,
+    routes: { delete: { access: () => false } },
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should not grant access on no permission", async () => {
     const responseDel = await request(app)
@@ -159,7 +166,13 @@ describe("Check authorization", () => {
 
 describe("Delete subresources", () => {
   const path = "/v/1/model/:modelId/submodel";
-  addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useSubModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   checkJWT(
     () =>
@@ -229,7 +242,13 @@ describe("Delete subresources", () => {
 
 describe("delete advanced model", () => {
   const path = "/v/1/advancedmodel";
-  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useAdvancedModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should delete model", async () => {
     const dbs = getPool();
@@ -247,6 +266,22 @@ describe("delete advanced model", () => {
     expect(response.status).toBe(200);
     expect(response.body).toBe("ok");
     checkType(response, fName);
+  });
+});
+
+describe("Title and description", () => {
+  test("Should set default title", async () => {
+    const options1 = generateDelete("model", useModel, {}, "").options;
+    const options2 = generateDelete(
+      "model",
+      useModel,
+      { title: "My title", description: "yay" },
+      ""
+    ).options;
+    expect(options1.description).toBeFalsy();
+    expect(options1.title).toBe("Delete Model");
+    expect(options2.title).toBe("My title");
+    expect(options2.description).toBe("yay");
   });
 });
 

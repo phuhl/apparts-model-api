@@ -1,4 +1,5 @@
 const { NoModel, Model, useModel } = require("../tests/model.js");
+const generatePost = require("./generatePost");
 const {
   addCrud,
   accessLogic: { anybody },
@@ -64,7 +65,13 @@ const {
 
 describe("Post", () => {
   const path = "/v/1/model";
-  addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   checkJWT(
     () => request(app).post(url("model")).send({ someNumber: 3 }),
@@ -214,7 +221,13 @@ describe("Post", () => {
 
 describe("Post", () => {
   const path = "/v/1/model2";
-  addCrud(path, app, useModelWithDefault, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useModelWithDefault,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   checkJWT(
     () => request(app).post(url("model")).send({ someNumber: 3 }),
@@ -262,13 +275,13 @@ describe("Post", () => {
 
 describe("Check authorization", () => {
   const path = "/v/1/modelauth";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    { post: () => false },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    model: useModel,
+    routes: { post: { access: () => false } },
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should not grant access on no permission", async () => {
     const responsePost = await request(app)
@@ -286,7 +299,13 @@ describe("Check authorization", () => {
 
 describe("Post multikey", () => {
   const path = "/v/1/multimodel";
-  addCrud(path, app, useMultiModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useMultiModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Post with multi key", async () => {
     const dbs = getPool();
@@ -324,7 +343,13 @@ describe("Post multikey", () => {
 
 describe("Post subresources", () => {
   const path = "/v/1/model/:modelId/submodel";
-  addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useSubModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Post a subresouce", async () => {
     const dbs = getPool();
@@ -346,7 +371,13 @@ describe("Post subresources", () => {
 
 describe("post advanced model", () => {
   const path = "/v/1/advancedmodel";
-  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useAdvancedModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should create model", async () => {
     const dbs = getPool();
@@ -367,6 +398,22 @@ describe("post advanced model", () => {
       object: { a: 23, bcd: "nope" },
     });
     checkType(response, fName);
+  });
+});
+
+describe("Title and description", () => {
+  test("Should set default title", async () => {
+    const options1 = generatePost("model", useModel, {}, "").options;
+    const options2 = generatePost(
+      "model",
+      useModel,
+      { title: "My title", description: "yay" },
+      ""
+    ).options;
+    expect(options1.description).toBeFalsy();
+    expect(options1.title).toBe("Create Model");
+    expect(options2.title).toBe("My title");
+    expect(options2.description).toBe("yay");
   });
 });
 

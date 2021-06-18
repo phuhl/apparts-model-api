@@ -1,4 +1,5 @@
 const { Model, useModel } = require("../tests/model.js");
+const generateGetByIds = require("./generateGetByIds");
 const {
   addCrud,
   accessLogic: { anybody },
@@ -6,7 +7,7 @@ const {
 const { generateMethods } = require("./");
 
 const fName = "/:ids",
-  auth = { getByIds: anybody };
+  auth = { getByIds: { access: anybody } };
 const methods = generateMethods("/v/1/model", useModel, auth, "");
 
 const {
@@ -53,7 +54,13 @@ const {
 
 describe("getByIds", () => {
   const path = "/v/1/model";
-  addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   checkJWT(() => request(app).get(url("model/[]")), "/:ids", checkType);
 
@@ -91,13 +98,13 @@ describe("getByIds", () => {
 
 describe("Check authorization", () => {
   const path = "/v/1/modelauth";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    { getByIds: () => false },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    model: useModel,
+    routes: { getByIds: { access: () => false } },
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should not grant access on no permission", async () => {
     const responseGetById = await request(app)
@@ -114,7 +121,13 @@ describe("Check authorization", () => {
 describe("getByIds subresources", () => {
   const path = "/v/1/model/:modelId/submodel";
 
-  addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useSubModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
   const methods2 = generateMethods(path, useSubModel, auth, "");
 
   test("Get from subresouce", async () => {
@@ -182,7 +195,13 @@ describe("getByIds subresources", () => {
 
 describe("getByIds advanced model", () => {
   const path = "/v/1/advancedmodel";
-  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useAdvancedModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
   const methods2 = generateMethods(path, useAdvancedModel, auth, "");
 
   test("Should return model", async () => {
@@ -208,6 +227,21 @@ describe("getByIds advanced model", () => {
   });
 });
 
+describe("Title and description", () => {
+  test("Should set default title", async () => {
+    const options1 = generateGetByIds("model", useModel, {}, "").options;
+    const options2 = generateGetByIds(
+      "model",
+      useModel,
+      { title: "My title", description: "yay" },
+      ""
+    ).options;
+    expect(options1.description).toBeFalsy();
+    expect(options1.title).toBe("Get Model by Ids");
+    expect(options2.title).toBe("My title");
+    expect(options2.description).toBe("yay");
+  });
+});
 test("All possible responses tested", () => {
   allChecked(fName);
 });

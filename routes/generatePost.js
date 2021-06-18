@@ -9,7 +9,12 @@ const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 const { DoesExist } = require("@apparts/model");
 
-const generatePost = (prefix, useModel, authF, webtokenkey) => {
+const generatePost = (
+  prefix,
+  useModel,
+  { access: authF, title, description },
+  webtokenkey
+) => {
   const postF = prepauthTokenJWT(webtokenkey)(
     {
       params: {
@@ -58,7 +63,8 @@ const generatePost = (prefix, useModel, authF, webtokenkey) => {
       return model.content.id;
     },
     {
-      title: "Create " + nameFromPrefix(prefix),
+      title: title || "Create " + nameFromPrefix(prefix),
+      description,
       returns: [
         {
           status: 200,

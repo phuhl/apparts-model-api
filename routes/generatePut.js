@@ -9,7 +9,12 @@ const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 const { NotFound } = require("@apparts/model");
 
-const generatePut = (prefix, useModel, authF, webtokenkey) => {
+const generatePut = (
+  prefix,
+  useModel,
+  { access: authF, title, description },
+  webtokenkey
+) => {
   const putF = prepauthTokenJWT(webtokenkey)(
     {
       params: {
@@ -80,7 +85,8 @@ const generatePut = (prefix, useModel, authF, webtokenkey) => {
       return model.content.id;
     },
     {
-      title: "Alter " + nameFromPrefix(prefix),
+      title: title || "Alter " + nameFromPrefix(prefix),
+      description,
       returns: [
         {
           status: 200,

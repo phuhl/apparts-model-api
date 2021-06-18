@@ -3,7 +3,12 @@ const { IsReference } = require("@apparts/model");
 const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
 
-const generateDelete = (prefix, useModel, authF, webtokenkey) => {
+const generateDelete = (
+  prefix,
+  useModel,
+  { access: authF, title, description },
+  webtokenkey
+) => {
   const deleteF = prepauthTokenJWT(webtokenkey)(
     {
       params: {
@@ -39,7 +44,8 @@ const generateDelete = (prefix, useModel, authF, webtokenkey) => {
       return "ok";
     },
     {
-      title: "Get " + nameFromPrefix(prefix) + " by Ids",
+      title: title || "Delete " + nameFromPrefix(prefix),
+      description,
       returns: [
         { status: 200, value: "ok" },
         { status: 403, error: "You don't have the rights to retrieve this." },

@@ -1,6 +1,9 @@
 const { HttpError } = require("@apparts/error");
 
 const checkAuth = async (authF, res, me) => {
+  if (!authF) {
+    return;
+  }
   const allowed = await authF(res, me);
   if (!allowed) {
     throw new HttpError(403, "You don't have the rights to retrieve this.");

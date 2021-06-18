@@ -1,4 +1,5 @@
 const { createFilter, createOrder } = require("./generateGet");
+const generateGet = require("./generateGet");
 const { Model, useModel } = require("../tests/model.js");
 const {
   addCrud,
@@ -7,7 +8,7 @@ const {
 const { generateMethods } = require("./");
 
 const fName = "",
-  auth = { get: anybody };
+  auth = { get: { access: anybody } };
 const methods = generateMethods("/v/1/model", useModel, auth, "");
 
 const {
@@ -53,7 +54,13 @@ const {
 
 describe("Get", () => {
   const path = "/v/1/model";
-  addCrud(path, app, useModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
   checkJWT(() => request(app).get(url("model")), "", checkType);
 
   test("Get all", async () => {
@@ -354,13 +361,13 @@ describe("Get", () => {
 
 describe("Check authorization", () => {
   const path = "/v/1/modelauth";
-  addCrud(
-    path,
+  addCrud({
+    prefix: path,
     app,
-    useModel,
-    { get: () => false },
-    "rsoaietn0932lyrstenoie3nrst"
-  );
+    model: useModel,
+    routes: { get: { access: () => false } },
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
 
   test("Should not grant access on no permission", async () => {
     const responseGet = await request(app)
@@ -376,7 +383,13 @@ describe("Check authorization", () => {
 
 describe("get subresources", () => {
   const path = "/v/1/model/:modelId/submodel";
-  addCrud(path, app, useSubModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useSubModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
   const methods2 = generateMethods(path, useSubModel, auth, "");
 
   test("Get from subresouce", async () => {
@@ -436,7 +449,13 @@ describe("get subresources", () => {
 
 describe("get advanced model", () => {
   const path = "/v/1/advancedmodel";
-  addCrud(path, app, useAdvancedModel, auth, "rsoaietn0932lyrstenoie3nrst");
+  addCrud({
+    prefix: path,
+    app,
+    model: useAdvancedModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
   const methods2 = generateMethods(path, useAdvancedModel, auth, "");
 
   test("Should return model", async () => {
@@ -544,6 +563,22 @@ describe("order api type", () => {
       optional: true,
       type: "array",
     });
+  });
+});
+
+describe("Title and description", () => {
+  test("Should set default title", async () => {
+    const options1 = generateGet("model", useModel, {}, "").options;
+    const options2 = generateGet(
+      "model",
+      useModel,
+      { title: "My title", description: "yay" },
+      ""
+    ).options;
+    expect(options1.description).toBeFalsy();
+    expect(options1.title).toBe("Get Model");
+    expect(options2.title).toBe("My title");
+    expect(options2.description).toBe("yay");
   });
 });
 
