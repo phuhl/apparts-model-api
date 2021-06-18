@@ -21,6 +21,12 @@ const types = {
     mapped: "someNumber",
     public: true,
   },
+  isDerived: {
+    public: true,
+    type: "id",
+    persisted: false,
+    derived: ({ id }) => id,
+  },
 };
 
 const [Models, Model, NoModel] = useModel(types, "model");

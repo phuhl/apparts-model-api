@@ -56,6 +56,9 @@ const createBody = (prefix, useModel) => {
   const types = Models.getTypes();
   for (const key in types) {
     const tipe = types[key];
+    if (tipe.derived) {
+      continue;
+    }
     let name = key;
     if (tipe.public && !tipe.auto) {
       if (tipe.mapped) {

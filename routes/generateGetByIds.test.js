@@ -74,10 +74,12 @@ describe("getByIds", () => {
     expect(response.body).toMatchObject([
       {
         id: model1.content.id,
+        isDerived: model1.content.id,
         optionalVal: "test",
         someNumber: model1.content.mapped,
       },
       {
+        isDerived: model3.content.id,
         id: model3.content.id,
         someNumber: model3.content.mapped,
       },

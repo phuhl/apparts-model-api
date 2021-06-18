@@ -71,10 +71,12 @@ describe("Get", () => {
         id: model1.content.id,
         someNumber: 10,
         optionalVal: "test",
+        isDerived: model1.content.id,
       },
       {
         id: model2.content.id,
         someNumber: 11,
+        isDerived: model2.content.id,
       },
     ]);
     checkType(response, fName);
