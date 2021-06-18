@@ -60,7 +60,7 @@ const createBody = (prefix, useModel) => {
       continue;
     }
     let name = key;
-    if (tipe.public && !tipe.auto) {
+    if (tipe.public && !tipe.auto && !tipe.readOnly) {
       if (tipe.mapped) {
         name = tipe.mapped;
       }

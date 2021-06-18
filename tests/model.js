@@ -24,7 +24,6 @@ const types = {
   isDerived: {
     public: true,
     type: "id",
-    persisted: false,
     derived: ({ id }) => id,
   },
 };

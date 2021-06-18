@@ -23,7 +23,7 @@
     "url": "https://github.com/phuhl/apparts-model-api/issues"
   },
   "peerDependencies": {
-    "@apparts/model": "^4.0.2",
+    "@apparts/model": "^4.2.0",
     "@apparts/types": "^6.1.1"
   },
   "devDependencies": {

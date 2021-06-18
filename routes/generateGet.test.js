@@ -1,3 +1,4 @@
+const { createFilter, createOrder } = require("./generateGet");
 const { Model, useModel } = require("../tests/model.js");
 const {
   addCrud,
@@ -458,6 +459,91 @@ describe("get advanced model", () => {
     expect(response.body).toMatchObject([model1.content]);
     expect(response.body.length).toBe(1);
     checkType(response, fName);
+  });
+});
+
+describe("filter api type", () => {
+  test("Should not include derived types", async () => {
+    expect(createFilter("", useModel)).toStrictEqual({
+      keys: {
+        id: {
+          alternatives: [
+            {
+              type: "id",
+            },
+          ],
+          optional: true,
+          type: "oneOf",
+        },
+        optionalVal: {
+          alternatives: [
+            {
+              type: "string",
+            },
+            {
+              keys: {
+                like: {
+                  type: "string",
+                },
+              },
+              type: "object",
+            },
+          ],
+          optional: true,
+          type: "oneOf",
+        },
+        someNumber: {
+          alternatives: [
+            {
+              type: "int",
+            },
+          ],
+          optional: true,
+          type: "oneOf",
+        },
+      },
+      optional: true,
+      type: "object",
+    });
+  });
+});
+
+describe("order api type", () => {
+  test("Should not include derived types", async () => {
+    expect(createOrder(useModel)).toStrictEqual({
+      items: {
+        keys: {
+          dir: {
+            alternatives: [
+              {
+                value: "ASC",
+              },
+              {
+                value: "DESC",
+              },
+            ],
+            type: "oneOf",
+          },
+          key: {
+            alternatives: [
+              {
+                value: "id",
+              },
+              {
+                value: "optionalVal",
+              },
+              {
+                value: "someNumber",
+              },
+            ],
+            type: "oneOf",
+          },
+        },
+        type: "object",
+      },
+      optional: true,
+      type: "array",
+    });
   });
 });
 

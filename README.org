@@ -160,3 +160,25 @@ const orS = (...fs) => async (...params) => await fs.reduce(async (a, b) => awai
 // anybody
 const anybody = () => true;
 #+END_SRC
+
+** Special parameters in the model
+
+When defining the type of your model, you can use all the parameters
+as defined by [[https://github.com/phuhl/apparts-model][@apparts/model]] (e.g. =public=, =mapped=, =optional=, =derived=,
+=auto=). The generated API endpoints respect these values:
+
+- Only types with =public: true= are shown on GET and can be set with
+  POST and PUT
+- Types with =mapped: true= are shown to the outside with their mapped names
+- Types with =optional: true= are optional and don't have to be set
+- Types with =auto= or a =derived= function can not be set on PUT or POST
+- The =derived= function can be used to fetch sub object as the =derived=
+  function is called asynchronously.
+
+Additionally, @apparts/model-api respects the value =readOnly=:
+
+- Types with =readOnly: true= can only be read. It's value have to be
+  created with a =default= function. This can be useful, e.g. for a
+  created date, that should be readable (i.e. public) but not be
+  modifiable.
+  

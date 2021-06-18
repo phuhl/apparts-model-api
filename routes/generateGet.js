@@ -17,7 +17,7 @@ const createFilter = (prefix, useModel) => {
   for (const key in types) {
     const tipe = types[key];
     let name = key;
-    if (tipe.public) {
+    if (tipe.public && !tipe.derived) {
       if (tipe.mapped) {
         name = tipe.mapped;
       }
@@ -66,7 +66,7 @@ const createOrder = (useModel) => {
   for (const key in types) {
     const tipe = types[key];
     let name = key;
-    if (tipe.public) {
+    if (tipe.public && !tipe.derived) {
       if (tipe.mapped) {
         name = tipe.mapped;
       }
@@ -123,6 +123,7 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
       }
       const res = new Many();
       await res.load({ ...filter, ...params }, limit, offset, order);
+      await res.generateDerived();
       return res.getPublic();
     },
     {
@@ -144,3 +145,5 @@ const generateGet = (prefix, useModel, authF, webtokenkey) => {
 };
 
 module.exports = generateGet;
+module.exports.createFilter = createFilter;
+module.exports.createOrder = createOrder;

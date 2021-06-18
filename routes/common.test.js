@@ -1,4 +1,6 @@
+const { createBody } = require("./common");
 const { useModel } = require("../tests/model.js");
+const { makeModel, useModel: _useModel } = require("@apparts/model");
 const {
   addCrud,
   accessLogic: { anybody, and, andS, or, orS },
@@ -431,5 +433,47 @@ describe("orS", () => {
       async () => new Promise((res) => setTimeout(() => res(false), 10))
     )();
     expect(res).toBe(false);
+  });
+});
+
+describe("createBody", () => {
+  test("Should not produce derived values in body", async () => {
+    expect(createBody("", useModel)).toStrictEqual({
+      optionalVal: {
+        optional: true,
+        type: "string",
+      },
+      someNumber: {
+        type: "int",
+      },
+    });
+  });
+
+  test("Should not produce readOnly values in body", async () => {
+    const [Models, Model, NoModel] = _useModel(
+      {
+        id: {
+          type: "id",
+          public: true,
+          auto: true,
+          key: true,
+        },
+        val: {
+          type: "string",
+          public: true,
+        },
+        created: {
+          type: "time",
+          default: () => 100,
+          public: true,
+          readOnly: true,
+        },
+      },
+      "modelWithReadOnly"
+    );
+    const { useMyModel } = makeModel("MyModel", [Models, Model, NoModel]);
+    expect(createBody("", useMyModel)).toStrictEqual({
+      val: { type: "string" },
+    });
   });
 });

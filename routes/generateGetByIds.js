@@ -25,6 +25,7 @@ const generateGetByIds = (prefix, useModel, authF, webtokenkey) => {
       const [Many] = useModel(dbs);
       const res = new Many();
       await res.load({ id: { op: "in", val: ids }, ...restParams });
+      await res.generateDerived();
       return res.getPublic();
     },
     {
