@@ -30,6 +30,9 @@ const typeFromModeltype = (tipe) => {
   if (tipe.optional) {
     res.optional = tipe.optional;
   }
+  if (tipe.alternatives) {
+    res.alternatives = tipe.alternatives;
+  }
 
   return res;
 };
