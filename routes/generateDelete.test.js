@@ -10,18 +10,12 @@ const fName = "/:ids",
   auth = { delete: anybody };
 const methods = generateMethods("/v/1/model", useModel, auth, "");
 
-const {
-  app,
-  url,
-  error,
-  getPool,
-  checkType,
-  allChecked,
-} = require("@apparts/backend-test")({
-  testName: "delete",
-  apiContainer: methods.delete,
-  schemas: [
-    `
+const { app, url, error, getPool, checkType, allChecked } =
+  require("@apparts/backend-test")({
+    testName: "delete",
+    apiContainer: methods.delete,
+    schemas: [
+      `
 CREATE TABLE model (
   id SERIAL PRIMARY KEY,
   "optionalVal" TEXT,
@@ -41,10 +35,15 @@ CREATE TABLE advancedmodel (
   textarray text[],
   object json,
   jsonarray json
-);`,
-  ],
-  apiVersion: 1,
-});
+);
+CREATE TABLE strangeids (
+  id VARCHAR(8) PRIMARY KEY,
+  val INT NOT NULL
+);
+    `,
+    ],
+    apiVersion: 1,
+  });
 const request = require("supertest");
 const { checkJWT, jwt } = require("../tests/checkJWT");
 const { SubModel, NoSubModel, useSubModel } = require("../tests/submodel.js");
@@ -53,6 +52,7 @@ const {
   NoAdvancedModel,
   useAdvancedModel,
 } = require("../tests/advancedmodel.js");
+const { StangeIdModels, useStangeIdModel } = require("../tests/strangeids.js");
 
 describe("Delete", () => {
   const path = "/v/1/model";
@@ -282,6 +282,47 @@ describe("Title and description", () => {
     expect(options1.title).toBe("Delete Model");
     expect(options2.title).toBe("My title");
     expect(options2.description).toBe("yay");
+  });
+});
+
+describe("Ids of other format", () => {
+  const path = "/v/1/strangemodel";
+  addCrud({
+    prefix: path,
+    app,
+    model: useStangeIdModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
+  const methods2 = generateMethods(path, useStangeIdModel, auth, "");
+
+  it("should delete with other id format", async () => {
+    methods.delete[fName] = methods2.delete[fName];
+    const dbs = getPool();
+    await new StangeIdModels(dbs, [
+      {
+        id: "test1",
+        val: 1,
+      },
+      {
+        id: "test2",
+        val: 2,
+      },
+    ]).store();
+    const response = await request(app)
+      .delete(url("strangemodel/" + JSON.stringify(["test1"])))
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.body).toBe("ok");
+    expect(response.status).toBe(200);
+    const model2 = await new StangeIdModels(dbs).load({});
+    expect(model2.contents).toMatchObject([
+      {
+        id: "test2",
+        val: 2,
+      },
+    ]);
+    expect(model2.contents.length).toBe(1);
+    checkType(response, fName);
   });
 });
 

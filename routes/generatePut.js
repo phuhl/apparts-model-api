@@ -4,6 +4,7 @@ const {
   reverseMap,
   createBody,
   checkAuth,
+  createIdParam,
 } = require("./common");
 const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
@@ -19,7 +20,7 @@ const generatePut = (
     {
       params: {
         ...createParams(prefix, useModel),
-        id: { type: "id" },
+        id: createIdParam(useModel),
       },
       body: {
         ...createBody(prefix, useModel),
@@ -90,7 +91,7 @@ const generatePut = (
       returns: [
         {
           status: 200,
-          type: "id",
+          ...createIdParam(useModel),
         },
         {
           status: 400,

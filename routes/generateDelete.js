@@ -1,4 +1,9 @@
-const { createParams, nameFromPrefix, checkAuth } = require("./common");
+const {
+  createParams,
+  nameFromPrefix,
+  checkAuth,
+  createIdParam,
+} = require("./common");
 const { IsReference } = require("@apparts/model");
 const { HttpError, fromThrows } = require("@apparts/error");
 const { prepauthTokenJWT } = require("@apparts/types");
@@ -13,7 +18,7 @@ const generateDelete = (
     {
       params: {
         ...createParams(prefix, useModel),
-        ids: { type: "array_id" },
+        ids: { type: "array", items: createIdParam(useModel) },
       },
     },
     async (req, me) => {

@@ -3,6 +3,7 @@ const {
   nameFromPrefix,
   createReturns,
   checkAuth,
+  createIdParam,
 } = require("./common");
 const { prepauthTokenJWT } = require("@apparts/types");
 
@@ -16,7 +17,7 @@ const generateGetByIds = (
     {
       params: {
         ...createParams(prefix, useModel),
-        ids: { type: "array_id" },
+        ids: { type: "array", items: createIdParam(useModel) },
       },
     },
     async (req, me) => {

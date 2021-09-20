@@ -37,6 +37,12 @@ const typeFromModeltype = (tipe) => {
   return res;
 };
 
+const createIdParam = (useModel) => {
+  const [Models] = useModel();
+  const idType = Models.getTypes().id;
+  return { type: idType.type };
+};
+
 const createParams = (prefix, useModel) => {
   const [Models] = useModel();
   const pathParams = prefix
@@ -152,4 +158,5 @@ module.exports = {
   reverseMap,
   typeFromModeltype,
   unmapKey,
+  createIdParam,
 };

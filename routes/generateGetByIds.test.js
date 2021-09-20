@@ -10,19 +10,13 @@ const fName = "/:ids",
   auth = { getByIds: { access: anybody } };
 const methods = generateMethods("/v/1/model", useModel, auth, "");
 
-const {
-  app,
-  url,
-  getPool,
-  checkType,
-  allChecked,
-  error,
-} = require("@apparts/backend-test")({
-  testName: "getByIds",
-  apiContainer: methods.get,
-  apiVersion: 1,
-  schemas: [
-    `
+const { app, url, getPool, checkType, allChecked, error } =
+  require("@apparts/backend-test")({
+    testName: "getByIds",
+    apiContainer: methods.get,
+    apiVersion: 1,
+    schemas: [
+      `
 CREATE TABLE model (
   id SERIAL PRIMARY KEY,
   "optionalVal" TEXT,
@@ -40,9 +34,14 @@ CREATE TABLE advancedmodel (
   id SERIAL PRIMARY KEY,
   textarray text[],
   object json
+);
+
+CREATE TABLE strangeids (
+  id VARCHAR(8) PRIMARY KEY,
+  val INT NOT NULL
 );`,
-  ],
-});
+    ],
+  });
 
 const request = require("supertest");
 const { checkJWT, jwt } = require("../tests/checkJWT");
@@ -51,6 +50,7 @@ const {
   AdvancedModel,
   useAdvancedModel,
 } = require("../tests/advancedmodel.js");
+const { StangeIdModel, useStangeIdModel } = require("../tests/strangeids.js");
 
 describe("getByIds", () => {
   const path = "/v/1/model";
@@ -240,6 +240,39 @@ describe("Title and description", () => {
     expect(options1.title).toBe("Get Model by Ids");
     expect(options2.title).toBe("My title");
     expect(options2.description).toBe("yay");
+  });
+});
+
+describe("Ids of other format", () => {
+  const path = "/v/1/strangemodel";
+  addCrud({
+    prefix: path,
+    app,
+    model: useStangeIdModel,
+    routes: auth,
+    webtokenkey: "rsoaietn0932lyrstenoie3nrst",
+  });
+  const methods2 = generateMethods(path, useStangeIdModel, auth, "");
+
+  it("should get with other id format", async () => {
+    methods.get[fName] = methods2.get[fName];
+    const dbs = getPool();
+    const model1 = await new StangeIdModel(dbs, {
+      id: "test1",
+      val: 1,
+    }).store();
+    const response = await request(app)
+      .get(url("strangemodel/" + JSON.stringify([model1.content.id])))
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject([
+      {
+        id: "test1",
+        val: 1,
+      },
+    ]);
+    expect(response.body.length).toBe(1);
+    checkType(response, fName);
   });
 });
 test("All possible responses tested", () => {
