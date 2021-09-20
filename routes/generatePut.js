@@ -57,12 +57,7 @@ const generatePut = (
 
       const optionalsToBeRemoved = {};
       Object.keys(types)
-        .filter(
-          (key) =>
-            !body[key] &&
-            types[key].public &&
-            (types[key].optional || types[key].default)
-        )
+        .filter((key) => !body[key] && types[key].public && types[key].optional)
         .forEach((key) => {
           optionalsToBeRemoved[key] = null;
         });
