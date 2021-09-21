@@ -62,7 +62,9 @@ const generatePut = (
           optionalsToBeRemoved[key] = null;
         });
 
-      const paramOverlap = Object.keys(body).filter((key) => params[key]);
+      const paramOverlap = Object.keys(body)
+        .filter((key) => params[key])
+        .filter((key) => body[key] !== params[key]);
       if (paramOverlap.length > 0) {
         return new HttpError(
           400,

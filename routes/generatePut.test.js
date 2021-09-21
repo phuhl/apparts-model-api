@@ -338,7 +338,29 @@ describe("Put subresources", () => {
     checkType(response, fName);
   });
 
-  test("Put a subresouce with id", async () => {
+  test("Put a subresouce with correct id", async () => {
+    const dbs = getPool();
+    const model1 = await new Model(dbs, { mapped: 100 }).store();
+    const submodel = await new SubModel(dbs, {
+      modelId: model1.content.id,
+    }).store();
+    const response = await request(app)
+      .put(url(`model/${model1.content.id}/submodel/${submodel.content.id}`))
+      .send({ opt: "exists", modelId: model1.content.id })
+      .set("Authorization", "Bearer " + jwt());
+    const submodelNew = await new SubModel(dbs).loadById(submodel.content.id);
+    expect(response.status).toBe(200);
+    expect(response.body).toBe(submodel.content.id);
+    expect(submodelNew.content).toMatchObject({
+      id: submodel.content.id,
+      modelId: model1.content.id,
+      opt: "exists",
+    });
+    expect(submodel.content.opt).toBeFalsy();
+    checkType(response, fName);
+  });
+
+  test("Put a subresouce with wrong id", async () => {
     const dbs = getPool();
     const model1 = await new Model(dbs, { mapped: 100 }).store();
     const model2 = await new Model(dbs, { mapped: 101 }).store();
