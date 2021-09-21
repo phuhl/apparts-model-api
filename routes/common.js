@@ -40,7 +40,7 @@ const typeFromModeltype = (tipe) => {
 const createIdParam = (useModel) => {
   const [Models] = useModel();
   const idType = Models.getTypes().id;
-  return { type: idType.type };
+  return typeFromModeltype(idType);
 };
 
 const createParams = (prefix, useModel) => {
