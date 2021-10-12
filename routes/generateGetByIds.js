@@ -28,6 +28,10 @@ const generateGetByIds = (
         params: { ids, ...restParams },
       } = req;
 
+      if (ids.length === 0) {
+        return [];
+      }
+
       const [Many] = useModel(dbs);
       const res = new Many();
       await res.load({ id: { op: "in", val: ids }, ...restParams });

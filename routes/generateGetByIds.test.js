@@ -275,6 +275,19 @@ describe("Ids of other format", () => {
     checkType(response, fName);
   });
 });
+
+describe("empty id array", () => {
+  it("should return nothign", async () => {
+    const response = await request(app)
+      .get(url("model/" + JSON.stringify([])))
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject([]);
+    expect(response.body.length).toBe(0);
+    checkType(response, fName);
+  });
+});
+
 test("All possible responses tested", () => {
   allChecked(fName);
 });
