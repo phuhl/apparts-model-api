@@ -37,6 +37,21 @@ const createFilter = (prefix, useModel) => {
             },
           });
         }
+        if (
+          tipe.type === "int" ||
+          tipe.type === "float" ||
+          tipe.type === "time"
+        ) {
+          filter.keys[name].alternatives.push({
+            type: "object",
+            keys: {
+              gt: { type: tipe.type, optional: true },
+              gte: { type: tipe.type, optional: true },
+              lt: { type: tipe.type, optional: true },
+              lte: { type: tipe.type, optional: true },
+            },
+          });
+        }
       }
     }
   }
@@ -112,8 +127,17 @@ const generateGet = (
         filter = reverseMap(filter, types);
         for (const key in filter) {
           if (typeof filter[key] === "object") {
-            if (filter[key].like) {
-              filter[key] = { op: "like", val: filter[key].like };
+            const operants = Object.keys(filter[key]);
+            if (operants.length >= 2) {
+              filter[key] = {
+                op: "and",
+                val: operants.map((op) => ({ op, val: filter[key][op] })),
+              };
+            } else if (operants.length === 1) {
+              const op = operants[0];
+              filter[key] = { op, val: filter[key][op] };
+            } else {
+              delete filter[key];
             }
           }
         }

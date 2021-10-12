@@ -1,6 +1,6 @@
 const { createFilter, createOrder } = require("./generateGet");
 const generateGet = require("./generateGet");
-const { Model, useModel } = require("../tests/model.js");
+const { Models, Model, useModel } = require("../tests/model.js");
 const {
   addCrud,
   accessLogic: { anybody },
@@ -11,19 +11,13 @@ const fName = "",
   auth = { get: { access: anybody } };
 const methods = generateMethods("/v/1/model", useModel, auth, "");
 
-const {
-  app,
-  url,
-  error,
-  getPool,
-  checkType,
-  allChecked,
-} = require("@apparts/backend-test")({
-  testName: "get",
-  apiContainer: methods.get,
-  apiVersion: 1,
-  schemas: [
-    `
+const { app, url, error, getPool, checkType, allChecked } =
+  require("@apparts/backend-test")({
+    testName: "get",
+    apiContainer: methods.get,
+    apiVersion: 1,
+    schemas: [
+      `
 CREATE TABLE model (
   id SERIAL PRIMARY KEY,
   "optionalVal" TEXT,
@@ -42,8 +36,8 @@ CREATE TABLE advancedmodel (
   textarray text[],
   object json
 );`,
-  ],
-});
+    ],
+  });
 const request = require("supertest");
 const { checkJWT, jwt } = require("../tests/checkJWT");
 const { SubModel, useSubModel } = require("../tests/submodel.js");
@@ -51,6 +45,8 @@ const {
   AdvancedModel,
   useAdvancedModel,
 } = require("../tests/advancedmodel.js");
+
+const formatFilter = (a) => encodeURIComponent(JSON.stringify(a));
 
 describe("Get", () => {
   const path = "/v/1/model";
@@ -328,22 +324,20 @@ describe("Get", () => {
     checkType(response, fName);
   });
 
-  test("Get filtered", async () => {
+  test("Get filtered string", async () => {
     const dbs = getPool();
     await new Model(dbs, {
       mapped: 30,
       optionalVal: "cheap",
     }).store();
     const model2 = await new Model(dbs, {
-      mapped: 11,
+      mapped: 12,
       optionalVal: "dirty",
     }).store();
     const response = await request(app)
       .get(
         url("model", {
-          filter: encodeURIComponent(
-            JSON.stringify({ optionalVal: { like: "%rty" } })
-          ),
+          filter: formatFilter({ optionalVal: { like: "%rty" } }),
         })
       )
       .set("Authorization", "Bearer " + jwt());
@@ -356,6 +350,85 @@ describe("Get", () => {
     expect(response.body.length).toBe(1);
     expect(response.status).toBe(200);
     checkType(response, fName);
+  });
+
+  it("should filter number", async () => {
+    const dbs = getPool();
+    const model = await new Model(dbs, {
+      mapped: 13,
+    }).store();
+
+    const response = await request(app)
+      .get(url("model", { filter: formatFilter({ someNumber: 13 }) }))
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.body).toMatchObject([
+      {
+        id: model.content.id,
+        someNumber: 13,
+      },
+    ]);
+    expect(response.body.length).toBe(1);
+    expect(response.status).toBe(200);
+    checkType(response, fName);
+  });
+
+  it("should ignore empty filter for number", async () => {
+    const dbs = getPool();
+    const models = await new Models(dbs).load({});
+
+    const response = await request(app)
+      .get(url("model", { filter: formatFilter({ someNumber: {} }) }))
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.body.length).toBe(models.contents.length);
+    expect(response.status).toBe(200);
+    checkType(response, fName);
+  });
+
+  it("should filter number with greate and smaller", async () => {
+    const dbs = getPool();
+    await new Model(dbs, {
+      mapped: 103,
+    }).store();
+    const model2 = await new Model(dbs, {
+      mapped: 104,
+    }).store();
+    await new Model(dbs, {
+      mapped: 105,
+    }).store();
+
+    const response = await request(app)
+      .get(
+        url("model", {
+          filter: formatFilter({ someNumber: { gt: 103, lt: 105 } }),
+        })
+      )
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.body).toMatchObject([
+      {
+        id: model2.content.id,
+        someNumber: 104,
+      },
+    ]);
+    expect(response.body.length).toBe(1);
+    expect(response.status).toBe(200);
+    checkType(response, fName);
+
+    const response2 = await request(app)
+      .get(
+        url("model", {
+          filter: formatFilter({ someNumber: { gte: 104, lte: 104 } }),
+        })
+      )
+      .set("Authorization", "Bearer " + jwt());
+    expect(response.body).toMatchObject([
+      {
+        id: model2.content.id,
+        someNumber: 104,
+      },
+    ]);
+    expect(response2.body.length).toBe(1);
+    expect(response2.status).toBe(200);
+    checkType(response2, fName);
   });
 });
 
@@ -515,6 +588,27 @@ describe("filter api type", () => {
           alternatives: [
             {
               type: "int",
+            },
+            {
+              type: "object",
+              keys: {
+                gt: {
+                  optional: true,
+                  type: "int",
+                },
+                gte: {
+                  optional: true,
+                  type: "int",
+                },
+                lt: {
+                  optional: true,
+                  type: "int",
+                },
+                lte: {
+                  optional: true,
+                  type: "int",
+                },
+              },
             },
           ],
           optional: true,
